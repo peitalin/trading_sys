@@ -13,6 +13,7 @@ use currencies::CurrenciesSparkline;
 pub fn nomics_main() {
     let api_key = get_api_key().unwrap();
 
+
     let mut nomics = currencies::CurrenciesSparklineApi::new(api_key);
     nomics.parse_and_set_data();
     let data: Vec<CurrenciesSparkline> = nomics.data;
