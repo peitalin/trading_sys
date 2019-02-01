@@ -11,6 +11,10 @@ extern crate serde_json;
 extern crate serde;
 
 #[macro_use]
+extern crate strum_macros;
+extern crate strum;
+
+#[macro_use]
 extern crate env_logger;
 
 extern crate reqwest;
@@ -18,6 +22,7 @@ extern crate reqwest;
 // mod coinmarketcap;
 // mod nomics;
 mod binance;
+mod serde_parsers;
 
 
 
@@ -26,7 +31,6 @@ extern crate data_encoding;
 
 use std::fmt;
 use ring::{ digest, hmac };
-use data_encoding::BASE64;
 
 
 
@@ -35,39 +39,40 @@ fn main() -> std::io::Result<()> {
 
     // Setup logging
     env_logger::init();
-
     let connection = "wss://stream.binance.com:9443/ws/ethbtc@depth";
-    // binance::main(connection);
 
-    let url = "https://api.binance.com/wapi/v3/depositHistory.html";
+    binance::main(connection);
 
-    let SECRET_KEY = std::env::var("BINANCE_SECRET_KEY").expect("No env BINANCE_SECRET_KEY set");
-    let API_KEY = std::env::var("BINANCE_API_KEY").expect("No env BINANCE_API_KEY set");
-
-    let now = chrono::Utc::now().timestamp_millis();
-    let query = format!("timestamp={}", now);
-
-
-    let signed_key = hmac::SigningKey::new(&digest::SHA256, SECRET_KEY.as_bytes());
-    let signature = hmac::sign(&signed_key, query.as_bytes());
-
-
-    // println!("signature:  {:?}", signature);
-    // println!("Sha256hash: Signature(SHA256:{})", HexDigest(signature));
-    let url_full = format!("{}?{}&signature={}", url, query, HexDigest(signature));
-    println!("url_full: {:?}\n", url_full);
-
-
-    let mut response = reqwest::Client::new()
-        .get(&url_full)
-        .header("X-MBX-APIKEY", API_KEY)
-        .send().unwrap();
-
-
-    let mut resp_json = &response.json::<depositHistoryResponse>().unwrap();
-
-    println!("Response:\n{}", resp_json);
-    // println!("response: {:?}", &response.text().unwrap());
+    //
+    // let url = "https://api.binance.com/wapi/v3/depositHistory.html";
+    //
+    // let SECRET_KEY = std::env::var("BINANCE_SECRET_KEY").expect("No env BINANCE_SECRET_KEY set");
+    // let API_KEY = std::env::var("BINANCE_API_KEY").expect("No env BINANCE_API_KEY set");
+    //
+    // let now = chrono::Utc::now().timestamp_millis();
+    // let query = format!("timestamp={}", now);
+    //
+    //
+    // let signed_key = hmac::SigningKey::new(&digest::SHA256, SECRET_KEY.as_bytes());
+    // let signature = hmac::sign(&signed_key, query.as_bytes());
+    //
+    //
+    // // println!("signature:  {:?}", signature);
+    // // println!("Sha256hash: Signature(SHA256:{})", HexDigest(signature));
+    // let url_full = format!("{}?{}&signature={}", url, query, HexDigest(signature));
+    // println!("url_full: {:?}\n", url_full);
+    //
+    //
+    // let mut response = reqwest::Client::new()
+    //     .get(&url_full)
+    //     .header("X-MBX-APIKEY", API_KEY)
+    //     .send().unwrap();
+    //
+    //
+    // let mut resp_json = &response.json::<depositHistoryResponse>().unwrap();
+    //
+    // println!("Response:\n{}", resp_json);
+    // // println!("response: {:?}", &response.text().unwrap());
 
 
     Ok(())

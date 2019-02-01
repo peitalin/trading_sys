@@ -1,22 +1,26 @@
 
 
-
 use std::fmt;
+use std::time::Duration;
+
 use serde::de;
 use serde::de::{ Deserialize, Deserializer };
+
 use actix_web::ws;
 use actix::*;
 
 
+pub struct BookDepthActor {
+    pub clientWriter: ws::ClientWriter,
+}
 
-pub struct BookDepthClient(pub ws::ClientWriter);
+impl Actor for BookDepthActor {
 
-impl Actor for BookDepthClient {
     type Context = Context<Self>;
 
     fn started(&mut self, ctx: &mut Context<Self>) {
         // Start heartbeats otherwise server disconnects in 10 seconds
-        self.hb(ctx)
+        self.hb(ctx);
     }
 
     fn stopped(&mut self, _: &mut Context<Self>) {
@@ -24,67 +28,81 @@ impl Actor for BookDepthClient {
         // Stop application on disconnect
         System::current().stop();
     }
+
 }
 
-impl BookDepthClient {
+
+impl BookDepthActor {
     fn hb(&self, ctx: &mut Context<Self>) {
         ctx.run_later(std::time::Duration::new(1, 0), |act, ctx| {
-            act.0.ping("");
+            act.clientWriter.pong("Heartbeat");
             act.hb(ctx);
-
             // client should also check for a timeout here, similar to the
             // server code
         });
     }
+
+    fn handlePing(&mut self, ctx: &mut Context<Self>, ping: String) {
+        println!("{:?}", ws::Message::Ping(ping));
+        self.clientWriter.pong("Pong from BookDepthActor");
+        // self.hb(ctx)
+        // client should check for a timeout here, similar to server code
+    }
 }
+// fn handlePing<A: Actor>(act: &mut BookDepthActor, ctx: &mut Context<BookDepthActor>, ping: String)
+//     where A: Actor + 'static
+// {
+//     println!("{:?}", ws::Message::Ping(ping));
+//     act.clientWriter.pong("Pong from BookDepthActor");
+//     act.hb(ctx)
+//     // client should check for a timeout here, similar to server code
+// }
 
 
 #[derive(Message)]
 pub struct ClientCommand(pub String);
 
 /// Handle stdin commands
-impl Handler<ClientCommand> for BookDepthClient {
+impl Handler<ClientCommand> for BookDepthActor {
     type Result = ();
 
-    fn handle(&mut self, msg: ClientCommand, ctx: &mut Context<Self>) {
-        self.0.text(msg.0)
+    fn handle(&mut self, command: ClientCommand, ctx: &mut Context<Self>) {
+        self.clientWriter.text(command.0)
     }
 }
 
 
+
+
 /// Handle Websocket messages
-impl StreamHandler<ws::Message, ws::ProtocolError> for BookDepthClient {
+impl StreamHandler<ws::Message, ws::ProtocolError> for BookDepthActor {
     fn handle(&mut self, msg: ws::Message, ctx: &mut Context<Self>) {
         match msg {
             ws::Message::Text(txt) => {
-                let order_book = serde_json::from_str::<BookDepthStream>(&txt).unwrap();
+                let order_book = serde_json::from_str::<BookDepthData>(&txt).unwrap();
                 println!("{}", order_book);
+                // println!("{:?}", txt);
+            },
+            ws::Message::Ping(ping) => {
+                ctx.run_later(Duration::new(0, 0), |act, ctx| { act.handlePing(ctx, ping) });
             },
             _ => (),
         }
     }
 
     fn started(&mut self, ctx: &mut Context<Self>) {
-        println!("Websocket Connected.");
+        println!("<book_depth.rs>: Websocket Connected.");
     }
 
     fn finished(&mut self, ctx: &mut Context<Self>) {
-        println!("Websocket Disconnected.");
+        println!("<book_depth.rs>: Websocket Disconnected.");
         ctx.stop()
     }
 }
 
-impl fmt::Display for BookDepthStream {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let pretty_json = serde_json::to_string_pretty(&self).unwrap();
-        write!(f, "{}", pretty_json)
-    }
-}
-
-
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct BookDepthStream {
+pub struct BookDepthData {
     #[serde(rename = "e")]
     pub event: String,  // Event type
     #[serde(rename = "E")]
@@ -99,6 +117,13 @@ pub struct BookDepthStream {
     pub bids: Vec<Quote>, // Bids to be updated
     #[serde(rename = "a")]
     pub asks: Vec<Quote>, // Asks to be updated
+}
+
+impl fmt::Display for BookDepthData {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let pretty_json = serde_json::to_string_pretty(&self).unwrap();
+        write!(f, "{}", pretty_json)
+    }
 }
 
 
@@ -181,6 +206,9 @@ impl<'de> Deserialize<'de> for StringOrVec {
 }
 
 
+/// Implement traits fors UtcTime data structure
+/// Used for serde_json to deserialize Unix timestamps (int)
+/// into chrono::DateTime types
 #[derive(Debug, Serialize, Clone)]
 pub struct UtcTime(chrono::DateTime<chrono::Utc>);
 
@@ -205,3 +233,5 @@ impl fmt::Display for UtcTime {
         write!(f, "{}", newdate)
     }
 }
+
+

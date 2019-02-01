@@ -1,9 +1,9 @@
 
 
-
 use std::fmt;
 use serde::de;
 use serde::de::{Deserialize, Deserializer, Error, SeqAccess, Unexpected, Visitor};
+use crate::serde_parsers::{ deserialize_as_f64, deserialize_as_maybe_f64, Time };
 
 
 trait RequestData {
@@ -40,7 +40,6 @@ impl CurrenciesApi {
     }
 }
 
-
 pub struct PricesApi {
     pub url: String,
     pub data: Vec<Prices>,
@@ -58,7 +57,6 @@ impl PricesApi {
         self.data = json_data;
     }
 }
-
 
 pub struct CurrenciesIntervalApi {
     pub url: String,
@@ -78,7 +76,6 @@ impl CurrenciesIntervalApi {
     }
 }
 
-
 pub struct CurrenciesSparklineApi {
     pub url: String,
     pub data: Vec<CurrenciesSparkline>,
@@ -97,12 +94,10 @@ impl CurrenciesSparklineApi {
     }
 }
 
-
 pub struct SuppliesIntervalApi {
     pub url: String,
     pub data: Vec<SuppliesInterval>,
 }
-
 impl SuppliesIntervalApi {
     pub fn new(api_key: String) -> Self {
         SuppliesIntervalApi {
@@ -134,9 +129,6 @@ impl AllTimeHighsApi {
         self.data = json_data;
     }
 }
-
-
-
 
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -199,60 +191,8 @@ pub struct AllTimeHighs {
 }
 
 
-
-
-
-///////////////////////////////////////////////////////////////////////////
-/// Deserializers
-///////////////////////////////////////////////////////////////////////////
-
-fn deserialize_as_f64<'de, D>(deserializer: D) -> Result<f64, D::Error>
-    where D: de::Deserializer<'de>
-{
-    // define a visitor that deserializes String to f64
-    struct F64Visitor;
-
-    impl<'de> de::Visitor<'de> for F64Visitor {
-        type Value = f64;
-
-        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-            formatter.write_str("a string containing f64 data")
-        }
-
-        fn visit_str<E>(self, v: &str) -> Result<Self::Value, E> where E: de::Error {
-            // convert to f64
-            Ok(serde_json::from_str(v).unwrap())
-        }
-    }
-    // use our visitor to deserialize
-    deserializer.deserialize_any(F64Visitor)
-}
-
-fn deserialize_as_maybe_f64<'de, D>(deserializer: D) -> Result<Option<f64>, D::Error>
-    where D: de::Deserializer<'de>
-{
-    // define a visitor that deserializes String to f64
-    struct F64Visitor;
-
-    impl<'de> de::Visitor<'de> for F64Visitor {
-        type Value = Option<f64>;
-
-        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-            formatter.write_str("a string containing f64 data")
-        }
-
-        fn visit_str<E>(self, v: &str) -> Result<Self::Value, E> where E: de::Error {
-            // convert to f64
-            Ok(Some(serde_json::from_str(v).unwrap()))
-        }
-
-        fn visit_unit<E>(self) -> Result<Self::Value, E> where E: de::Error {
-            Ok(None) // convert to none
-        }
-    }
-    // use our visitor to deserialize
-    deserializer.deserialize_any(F64Visitor)
-}
+///////////////////// Deserializers for Serde /////////////////////
+///////////////////////////////////////////////////////////////////
 
 fn deserialize_as_vec_f64<'de, D>(deserializer: D) -> Result<Vec<f64>, D::Error> where D: de::Deserializer<'de>
 {
@@ -273,7 +213,7 @@ fn deserialize_as_vec_f64<'de, D>(deserializer: D) -> Result<Vec<f64>, D::Error>
 
             loop {
                 match visitor.next_element()? {
-                    Some(Value(elem)) => vec.push(elem), // elem is deserialized to f64
+                    Some(FpointValue(elem)) => vec.push(elem), // elem is deserialized to f64
                     None => break,
                 }
             }
@@ -322,12 +262,6 @@ where D: de::Deserializer<'de>
     deserializer.deserialize_any(VecTimeVisitor)
 }
 
-
-
-
-
-
-
 struct Inner(Vec<f64>);
 
 impl<'de> Deserialize<'de> for Inner {
@@ -349,7 +283,7 @@ impl<'de> Deserialize<'de> for Inner {
             {
                 let mut vec = Vec::new();
 
-                while let Some(Value(elem)) = visitor.next_element()? {
+                while let Some(FpointValue(elem)) = visitor.next_element()? {
                     vec.push(elem);
                 }
 
@@ -361,77 +295,16 @@ impl<'de> Deserialize<'de> for Inner {
     }
 }
 
-struct Value(f64);
+struct FpointValue(f64);
 
-impl<'de> Deserialize<'de> for Value {
-    fn deserialize<D>(deserializer: D) -> Result<Value, D::Error>
+impl<'de> Deserialize<'de> for FpointValue {
+    fn deserialize<D>(deserializer: D) -> Result<FpointValue, D::Error>
     where D: Deserializer<'de>
     {
         let s: String = Deserialize::deserialize(deserializer)?;
-        s.parse().map(Value).map_err(|_| {
+        s.parse().map(FpointValue).map_err(|_| {
             D::Error::invalid_value(Unexpected::Str(&s), &"a floating point number as a string")
         })
     }
 }
 
-struct Time(chrono::NaiveDateTime);
-
-impl<'de> Deserialize<'de> for Time {
-    fn deserialize<D>(deserializer: D) -> Result<Time, D::Error>
-    where D: Deserializer<'de>
-    {
-        let d: String = Deserialize::deserialize(deserializer)?;
-        let date = chrono::NaiveDateTime::parse_from_str(&d, "%Y-%m-%dT%H:%M:%SZ").unwrap();
-        Ok(Time(date))
-    }
-}
-
-// #[derive(Debug, Deserialize)]
-// struct Payload {
-//     #[serde(default, deserialize_with = "from_array_of_arrays_of_strs")]
-//     values: Vec<Vec<f64>>,
-// }
-//
-// fn from_array_of_arrays_of_strs<'de, D>(deserializer: D) -> Result<Vec<Vec<f64>>, D::Error>
-// where
-//     D: Deserializer<'de>,
-// {
-//     struct OuterVisitor;
-//
-//     impl<'de> Visitor<'de> for OuterVisitor {
-//         type Value = Vec<Vec<f64>>;
-//
-//         fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-//             formatter.write_str("a nonempty sequence of a sequence of numbers")
-//         }
-//
-//         #[inline]
-//         fn visit_seq<V>(self, mut visitor: V) -> Result<Self::Value, V::Error>
-//         where
-//             V: SeqAccess<'de>,
-//         {
-//             let mut vec = Vec::new();
-//
-//             while let Some(Inner(elem)) = visitor.next_element()? {
-//                 vec.push(elem);
-//             }
-//
-//             Ok(vec)
-//         }
-//     }
-//
-//     deserializer.deserialize_seq(OuterVisitor)
-// }
-
-
-// pub fn main() {
-//     let input = r#"
-// {
-//   "values": [["2", "1.4"], ["8.32", "1.5"]]
-// }
-// "#;
-//
-//     let out: Payload = serde_json::from_str(input).unwrap();
-//
-//     println!("{:?}", out);
-// }

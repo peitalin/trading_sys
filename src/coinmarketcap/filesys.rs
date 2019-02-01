@@ -5,7 +5,7 @@
 pub fn create_data_directory() {
     let date = chrono::Utc::now().format("%Y-%m-%d");
     println!("Creating directory: {}", &date);
-    let _ = std::fs::create_dir(std::path::Path::new(&format!("./data/{}", &date)));
+    let _ = std::fs::create_dir(std::path::Path::new(&format!("./data/coinmarketcap/{}", &date)));
 }
 
 
