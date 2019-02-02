@@ -68,3 +68,31 @@ impl<'de> Deserialize<'de> for Time {
         Ok(Time(date))
     }
 }
+
+/// Implement traits fors UtcTime data structure
+/// Used for serde_json to deserialize Unix timestamps (int)
+/// into chrono::DateTime types
+#[derive(Debug, Serialize, Clone)]
+pub struct UtcTime(chrono::DateTime<chrono::Utc>);
+
+impl<'de> Deserialize<'de> for UtcTime {
+    fn deserialize<D>(deserializer: D) -> Result<UtcTime, D::Error>
+    where D: Deserializer<'de>
+    {
+        let d: i64 = Deserialize::deserialize(deserializer)?;
+        let naive = chrono::NaiveDateTime::from_timestamp(d/1000, 0);
+        // Create a normal DateTime from the NaiveDateTime
+        let datetime = chrono::DateTime::from_utc(naive, chrono::Utc);
+        // // Format the datetime how you want
+        // let newdate = datetime.format("%Y-%m-%d %H:%M:%S");
+        Ok(UtcTime(datetime))
+    }
+}
+
+impl fmt::Display for UtcTime {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let datetime = self.0;
+        let newdate = datetime.format("%Y-%m-%d %H:%M:%S");
+        write!(f, "{}", newdate)
+    }
+}

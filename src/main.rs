@@ -41,7 +41,7 @@ fn main() -> std::io::Result<()> {
     env_logger::init();
     let connection = "wss://stream.binance.com:9443/ws/ethbtc@depth";
 
-    binance::main(connection);
+    // binance::main(connection);
 
     //
     // let url = "https://api.binance.com/wapi/v3/depositHistory.html";
