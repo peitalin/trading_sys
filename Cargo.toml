@@ -1,0 +1,32 @@
+[package]
+name = "trading"
+version = "0.1.0"
+authors = ["Peita Lin <n6378056@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+log = "0.4.0"
+env_logger = "0.6.0"
+maplit = "1"
+clap = "2"
+regex = "1"
+chrono = { version = "0.4", features = ["serde"] }
+scraper = "0.9.1"
+threadpool = "1"
+
+serde = "*"
+serde_json = "*"
+serde_derive = "*"
+
+reqwest = "*"
+hyper = "*"
+actix = "*"
+actix-web = { version = "0.7.18", features = ["alpn"] }
+futures = "*"
+
+ring = "*"
+data-encoding = "*"
+
+
+strum = "0.13.0"
+strum_macros = "*"
