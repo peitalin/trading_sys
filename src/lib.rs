@@ -41,6 +41,7 @@ pub mod db_actions;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 
+use crate::models::TradeData;
 
 
 pub fn establish_connection_pg() -> PgConnection {
@@ -51,5 +52,21 @@ pub fn establish_connection_pg() -> PgConnection {
 
     PgConnection::establish(&database_url)
         .expect(&format!("Error connecting to {}", database_url))
+}
+
+
+pub fn create_trade<'a> (conn: &PgConnection, trade_data: &TradeData) {
+    use crate::schema::trade;
+
+    let res = diesel::insert_into(trade::table)
+        .values(trade_data)
+        .execute(conn);
+
+    // let res: TradeData = diesel::insert_into(trade::table)
+    //     .values(&new_trade_data)
+    //     .get_result(conn)
+    //     .expect("Error saving new trade");
+
+    println!("Database write result: {:?}\n", res);
 }
 

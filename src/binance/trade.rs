@@ -1,6 +1,6 @@
 
 
-use super::super::establish_connection_pg;
+use crate::establish_connection_pg;
 use crate::db_actions::{ create_trade };
 use crate::models::TradeData;
 
