@@ -1,21 +1,17 @@
-
-
+use chrono::NaiveDateTime;
 use std::fmt;
 use std::time::Duration;
-use chrono::NaiveDateTime;
 
-use trading_sys::serde_parsers::{ deserialize_as_f64 };
+use trading_sys::serde_parsers::deserialize_as_f64;
 
-use actix_web::ws;
 use actix::*;
-
+use actix_web::ws;
 
 pub struct AggregateTradeActor {
     pub client_writer: ws::ClientWriter,
 }
 
 impl Actor for AggregateTradeActor {
-
     type Context = Context<Self>;
 
     fn started(&mut self, ctx: &mut Context<Self>) {
@@ -28,9 +24,7 @@ impl Actor for AggregateTradeActor {
         // Stop application on disconnect
         System::current().stop();
     }
-
 }
-
 
 impl AggregateTradeActor {
     fn hb(&self, ctx: &mut Context<Self>) {
@@ -49,7 +43,6 @@ impl AggregateTradeActor {
     }
 }
 
-
 #[derive(Message)]
 pub struct ClientCommand(pub String);
 
@@ -62,7 +55,6 @@ impl Handler<ClientCommand> for AggregateTradeActor {
     }
 }
 
-
 /// Handle Websocket messages
 impl StreamHandler<ws::Message, ws::ProtocolError> for AggregateTradeActor {
     fn handle(&mut self, msg: ws::Message, ctx: &mut Context<Self>) {
@@ -70,10 +62,10 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for AggregateTradeActor {
             ws::Message::Text(txt) => {
                 let aggregate_trade = serde_json::from_str::<AggregateTradeData>(&txt).unwrap();
                 println!("{}", aggregate_trade);
-            },
+            }
             ws::Message::Ping(ping) => {
-                ctx.run_later(Duration::new(0, 0), |act, ctx| { act.handle_ping(ctx, ping) });
-            },
+                ctx.run_later(Duration::new(0, 0), |act, ctx| act.handle_ping(ctx, ping));
+            }
             _ => (),
         }
     }
@@ -88,29 +80,28 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for AggregateTradeActor {
     }
 }
 
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AggregateTradeData {
     #[serde(rename = "e")]
-    pub agg_trade: String,      // Event type
+    pub agg_trade: String, // Event type
     #[serde(rename = "E")]
-    pub event_time: NaiveDateTime,   // Event time
+    pub event_time: NaiveDateTime, // Event time
     #[serde(rename = "s")]
-    pub symbol: String,        // Symbol
+    pub symbol: String, // Symbol
     #[serde(rename = "a")]
-    pub trade_id: u64,         // Trade ID
-    #[serde(deserialize_with="deserialize_as_f64")]
+    pub trade_id: u64, // Trade ID
+    #[serde(deserialize_with = "deserialize_as_f64")]
     #[serde(rename = "p")]
-    pub price: f64,            // Bids to be updated
-    #[serde(deserialize_with="deserialize_as_f64")]
+    pub price: f64, // Bids to be updated
+    #[serde(deserialize_with = "deserialize_as_f64")]
     #[serde(rename = "q")]
-    pub quantity: f64,         // Asks to be updated
+    pub quantity: f64, // Asks to be updated
     #[serde(rename = "f")]
-    pub first_trade_id: u64,   // First update ID in event
+    pub first_trade_id: u64, // First update ID in event
     #[serde(rename = "l")]
-    pub last_trade_id: u64,    // Final update ID in event
+    pub last_trade_id: u64, // Final update ID in event
     #[serde(rename = "T")]
-    pub trade_time: NaiveDateTime,   // Final update ID in event
+    pub trade_time: NaiveDateTime, // Final update ID in event
     #[serde(rename = "m")]
     pub buyer_mkt_maker: bool, //  is buyer the market maker?
 }
@@ -121,6 +112,3 @@ impl fmt::Display for AggregateTradeData {
         write!(f, "{}", pretty_json)
     }
 }
-
-
-

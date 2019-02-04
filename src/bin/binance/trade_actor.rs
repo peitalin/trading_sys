@@ -1,23 +1,16 @@
-
-
-use trading_sys::{
-    establish_connection_pg,
-    create_trade,
-};
-use trading_sys::models::TradeData;
+use trading_sys::models::TradeDataInsert;
+use trading_sys::{create_trade, establish_connection_pg};
 
 use std::time::Duration;
 
-use actix_web::ws;
 use actix::*;
-
+use actix_web::ws;
 
 pub struct TradeActor {
     pub client_writer: ws::ClientWriter,
 }
 
 impl Actor for TradeActor {
-
     type Context = Context<Self>;
 
     fn started(&mut self, ctx: &mut Context<Self>) {
@@ -30,11 +23,9 @@ impl Actor for TradeActor {
         // Stop application on disconnect
         System::current().stop();
     }
-
 }
 
 impl TradeActor {
-
     fn hb(&self, ctx: &mut Context<Self>) {
         ctx.run_later(std::time::Duration::new(1, 0), |act, ctx| {
             act.client_writer.pong("Heartbeat");
@@ -51,13 +42,11 @@ impl TradeActor {
     }
 }
 
-
 #[derive(Message)]
 pub struct ClientCommand(pub String);
 
 /// Handle stdin commands
 impl Handler<ClientCommand> for TradeActor {
-
     type Result = ();
 
     fn handle(&mut self, command: ClientCommand, ctx: &mut Context<Self>) {
@@ -65,36 +54,31 @@ impl Handler<ClientCommand> for TradeActor {
     }
 }
 
-
 /// Handle Websocket messages
 impl StreamHandler<ws::Message, ws::ProtocolError> for TradeActor {
-
     fn handle(&mut self, msg: ws::Message, ctx: &mut Context<Self>) {
         match msg {
             ws::Message::Text(txt) => {
-                let trade_data: TradeData = serde_json::from_str::<TradeData>(&txt).unwrap();
+                let trade_data: TradeDataInsert =
+                    serde_json::from_str::<TradeDataInsert>(&txt).unwrap();
 
                 let connection = establish_connection_pg();
                 create_trade(&connection, &trade_data);
                 println!("{:?}", trade_data);
-            },
+            }
             ws::Message::Ping(ping) => {
-                ctx.run_later(Duration::new(0, 0), |act, ctx| { act.handle_ping(ctx, ping) });
-            },
+                ctx.run_later(Duration::new(0, 0), |act, ctx| act.handle_ping(ctx, ping));
+            }
             _ => (),
         }
     }
 
     fn started(&mut self, ctx: &mut Context<Self>) {
-        println!("<trade.rs>: Websocket Connected.");
+        println!("<trade_actor.rs>: Websocket Connected.");
     }
 
     fn finished(&mut self, ctx: &mut Context<Self>) {
-        println!("<trade.rs>: Websocket Disconnected.");
+        println!("<trade_actor.rs>: Websocket Disconnected.");
         ctx.stop()
     }
 }
-
-
-
-

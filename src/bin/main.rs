@@ -1,31 +1,27 @@
-
 #![allow(unused_variables)]
 extern crate chrono;
 extern crate clap;
 
 #[macro_use]
 extern crate serde_derive;
-extern crate serde_json;
 extern crate serde;
+extern crate serde_json;
 
 #[macro_use]
 extern crate env_logger;
 extern crate reqwest;
 
-extern crate ring;
 extern crate data_encoding;
+extern crate ring;
 
 extern crate redis;
 
 extern crate trading_sys;
 
+use ring::{digest, hmac};
 use std::fmt;
-use ring::{ digest, hmac };
-
-
 
 fn main() -> std::io::Result<()> {
-
     // Setup logging
     env_logger::init();
 
@@ -51,23 +47,15 @@ fn main() -> std::io::Result<()> {
     // // println!("response: {:?}", &response.text().unwrap());
     // Ok(())
 
-    // std::process::Command::new("redis-server")
-    //     .output()
-    //     .expect("redis-server not installed properly");
-
     let client = redis::Client::open("redis://127.0.0.1/").unwrap();
     let conn = client.get_connection().unwrap();
     redis_get(&conn);
 
     Ok(())
-
 }
 
-
-
-
 fn redis_get(conn: &redis::Connection) -> redis::RedisResult<()> {
-    let _ : () = redis::cmd("SET").arg("my_key").arg(42).query(conn).unwrap();
+    let _: () = redis::cmd("SET").arg("my_key").arg(42).query(conn).unwrap();
     let user2: String = redis::cmd("GET").arg("user2").query(conn).unwrap();
     let user3: String = redis::cmd("GET").arg("user3").query(conn).unwrap();
     println!("Redis: user2: {}", user2);
@@ -75,18 +63,21 @@ fn redis_get(conn: &redis::Connection) -> redis::RedisResult<()> {
     Ok(())
 }
 
-
 pub fn sign_query(url: &str, query_string: &str) -> String {
-
-    let secret_key = std::env::var("BINANCE_SECRET_KEY").expect("No <BINANCE_SECRET_KEY> environment variable set.");
+    let secret_key = std::env::var("BINANCE_SECRET_KEY")
+        .expect("No <BINANCE_SECRET_KEY> environment variable set.");
     let signing_key = hmac::SigningKey::new(&digest::SHA256, secret_key.as_bytes());
     let signature = hmac::sign(&signing_key, query_string.as_bytes());
     println!("signature:  {:?}", signature);
     // println!("Sha256hash: Signature(SHA256:{})", HexDigest(signature));
-    let url_full = format!("{}?{}&signature={}", url, query_string, HexDigest(signature));
+    let url_full = format!(
+        "{}?{}&signature={}",
+        url,
+        query_string,
+        HexDigest(signature)
+    );
     url_full
 }
-
 
 #[derive(Debug)]
 pub struct HexDigest(ring::hmac::Signature);
@@ -106,7 +97,6 @@ impl fmt::Display for DepositHistoryResponse {
     }
 }
 
-
 #[derive(Debug, Deserialize, Serialize)]
 struct DepositAddressResponse {
     address: String,
@@ -114,7 +104,6 @@ struct DepositAddressResponse {
     address_tag: Option<String>,
     asset: String,
 }
-
 
 #[derive(Debug, Deserialize, Serialize)]
 struct DepositHistoryResponse {
@@ -132,8 +121,3 @@ struct DepositHistoryItem {
     asset: String,
     status: u64,
 }
-
-
-
-
-
