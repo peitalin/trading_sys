@@ -1,19 +1,17 @@
 
 
-use std::fmt;
+use super::super::establish_connection_pg;
+use crate::db_actions::{ create_trade };
+use crate::models::TradeData;
+
 use std::time::Duration;
 
-use serde::de;
-use serde::de::{ Deserialize, Deserializer };
-use crate::serde_parsers::{ deserialize_as_f64, UtcTime };
-
 use actix_web::ws;
-use futures::Future; // map_error for ws::Client
 use actix::*;
 
 
 pub struct TradeActor {
-    pub clientWriter: ws::ClientWriter,
+    pub client_writer: ws::ClientWriter,
 }
 
 impl Actor for TradeActor {
@@ -33,12 +31,11 @@ impl Actor for TradeActor {
 
 }
 
-
 impl TradeActor {
 
     fn hb(&self, ctx: &mut Context<Self>) {
         ctx.run_later(std::time::Duration::new(1, 0), |act, ctx| {
-            act.clientWriter.pong("Heartbeat");
+            act.client_writer.pong("Heartbeat");
             act.hb(ctx);
             // client should check for a timeout here, similar to server code
         });
@@ -46,7 +43,7 @@ impl TradeActor {
 
     fn handle_ping(&mut self, ctx: &mut Context<Self>, ping: String) {
         println!("{:?}", ws::Message::Ping(ping));
-        self.clientWriter.pong("Pong from TradeActor");
+        self.client_writer.pong("Pong from TradeActor");
         // self.hb(ctx)
         // client should check for a timeout here, similar to server code
     }
@@ -58,22 +55,26 @@ pub struct ClientCommand(pub String);
 
 /// Handle stdin commands
 impl Handler<ClientCommand> for TradeActor {
+
     type Result = ();
 
     fn handle(&mut self, command: ClientCommand, ctx: &mut Context<Self>) {
-        self.clientWriter.text(command.0)
+        self.client_writer.text(command.0)
     }
 }
 
 
 /// Handle Websocket messages
 impl StreamHandler<ws::Message, ws::ProtocolError> for TradeActor {
+
     fn handle(&mut self, msg: ws::Message, ctx: &mut Context<Self>) {
         match msg {
             ws::Message::Text(txt) => {
-                let trade = serde_json::from_str::<TradeData>(&txt).unwrap();
-                println!("{}", trade);
-                // println!("{:?}", txt);
+                let trade_data: TradeData = serde_json::from_str::<TradeData>(&txt).unwrap();
+
+                let connection = establish_connection_pg();
+                create_trade(&connection, &trade_data);
+                println!("{:?}", trade_data);
             },
             ws::Message::Ping(ping) => {
                 ctx.run_later(Duration::new(0, 0), |act, ctx| { act.handle_ping(ctx, ping) });
@@ -89,38 +90,6 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for TradeActor {
     fn finished(&mut self, ctx: &mut Context<Self>) {
         println!("<trade.rs>: Websocket Disconnected.");
         ctx.stop()
-    }
-}
-
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct TradeData {
-    #[serde(rename = "e")]
-    pub event: String,         // Event type
-    #[serde(rename = "E")]
-    pub event_time: UtcTime,   // Event time
-    #[serde(rename = "s")]
-    pub symbol: String,        // Symbol
-    #[serde(rename = "t")]
-    pub trade_Id: u64,         // Trade ID
-    #[serde(deserialize_with="deserialize_as_f64")]
-    #[serde(rename = "p")]
-    pub price: f64,            // Price
-    #[serde(deserialize_with="deserialize_as_f64")]
-    #[serde(rename = "q")]
-    pub quantity: f64,         // Quantity
-    #[serde(rename = "b")]
-    pub buyer_order_Id: u64,   // Buyer order ID
-    #[serde(rename = "a")]
-    pub seller_order_Id: u64,  // Seller order ID
-    #[serde(rename = "m")]
-    pub buyer_mkt_maker: bool, //  is buyer the market maket?
-}
-
-impl fmt::Display for TradeData {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let pretty_json = serde_json::to_string_pretty(&self).unwrap();
-        write!(f, "{}", pretty_json)
     }
 }
 

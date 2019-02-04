@@ -2,15 +2,16 @@
 
 use std::fmt;
 use std::time::Duration;
+use chrono::NaiveDateTime;
 
-use crate::serde_parsers::{ deserialize_as_f64, UtcTime };
+use crate::serde_parsers::{ deserialize_as_f64 };
 
 use actix_web::ws;
 use actix::*;
 
 
 pub struct AggregateTradeActor {
-    pub clientWriter: ws::ClientWriter,
+    pub client_writer: ws::ClientWriter,
 }
 
 impl Actor for AggregateTradeActor {
@@ -34,7 +35,7 @@ impl Actor for AggregateTradeActor {
 impl AggregateTradeActor {
     fn hb(&self, ctx: &mut Context<Self>) {
         ctx.run_later(Duration::new(1, 0), |act, ctx| {
-            act.clientWriter.pong("Heartbeat");
+            act.client_writer.pong("Heartbeat");
             act.hb(ctx);
             // client should check for a timeout here, similar to server code
         });
@@ -42,7 +43,7 @@ impl AggregateTradeActor {
 
     fn handle_ping(&mut self, ctx: &mut Context<Self>, ping: String) {
         println!("{:?}", ws::Message::Ping(ping));
-        self.clientWriter.pong("Pong from AggregateTradeActor");
+        self.client_writer.pong("Pong from AggregateTradeActor");
         // self.hb(ctx)
         // client should check for a timeout here, similar to server code
     }
@@ -57,7 +58,7 @@ impl Handler<ClientCommand> for AggregateTradeActor {
     type Result = ();
 
     fn handle(&mut self, command: ClientCommand, ctx: &mut Context<Self>) {
-        self.clientWriter.text(command.0)
+        self.client_writer.text(command.0)
     }
 }
 
@@ -93,11 +94,11 @@ pub struct AggregateTradeData {
     #[serde(rename = "e")]
     pub agg_trade: String,      // Event type
     #[serde(rename = "E")]
-    pub event_time: UtcTime,   // Event time
+    pub event_time: NaiveDateTime,   // Event time
     #[serde(rename = "s")]
     pub symbol: String,        // Symbol
     #[serde(rename = "a")]
-    pub trade_Id: u64,         // Trade ID
+    pub trade_id: u64,         // Trade ID
     #[serde(deserialize_with="deserialize_as_f64")]
     #[serde(rename = "p")]
     pub price: f64,            // Bids to be updated
@@ -105,13 +106,13 @@ pub struct AggregateTradeData {
     #[serde(rename = "q")]
     pub quantity: f64,         // Asks to be updated
     #[serde(rename = "f")]
-    pub first_trade_Id: u64,   // First update ID in event
+    pub first_trade_id: u64,   // First update ID in event
     #[serde(rename = "l")]
-    pub last_trade_Id: u64,    // Final update ID in event
+    pub last_trade_id: u64,    // Final update ID in event
     #[serde(rename = "T")]
-    pub trade_time: UtcTime,   // Final update ID in event
+    pub trade_time: NaiveDateTime,   // Final update ID in event
     #[serde(rename = "m")]
-    pub buyer_mkt_maker: bool, //  is buyer the market maket?
+    pub buyer_mkt_maker: bool, //  is buyer the market maker?
 }
 
 impl fmt::Display for AggregateTradeData {

@@ -2,22 +2,22 @@
 
 use std::fmt;
 use std::time::Duration;
+use chrono::NaiveDateTime;
 
 use serde::de;
 use serde::de::{ Deserialize, Deserializer };
-use crate::serde_parsers::{ UtcTime };
+use crate::serde_parsers::{ deserialize_as_naive_date_time };
+use super::currency_pairs::CurrencyPair;
 
 use actix_web::ws;
-use futures::Future; // map_error for ws::Client
 use actix::*;
 
 
 pub struct BookDepthActor {
-    pub clientWriter: ws::ClientWriter,
+    pub client_writer: ws::ClientWriter,
 }
 
 impl Actor for BookDepthActor {
-
     type Context = Context<Self>;
 
     fn started(&mut self, ctx: &mut Context<Self>) {
@@ -35,10 +35,9 @@ impl Actor for BookDepthActor {
 
 
 impl BookDepthActor {
-
     fn hb(&self, ctx: &mut Context<Self>) {
         ctx.run_later(std::time::Duration::new(1, 0), |act, ctx| {
-            act.clientWriter.pong("Heartbeat");
+            act.client_writer.pong("Heartbeat");
             act.hb(ctx);
             // client should also check for a timeout here, similar to the
             // server code
@@ -47,7 +46,7 @@ impl BookDepthActor {
 
     fn handle_ping(&mut self, ctx: &mut Context<Self>, ping: String) {
         println!("{:?}", ws::Message::Ping(ping));
-        self.clientWriter.pong("Pong from BookDepthActor");
+        self.client_writer.pong("Pong from BookDepthActor");
         // self.hb(ctx)
         // client should check for a timeout here, similar to server code
     }
@@ -56,7 +55,7 @@ impl BookDepthActor {
 //     where A: Actor + 'static
 // {
 //     println!("{:?}", ws::Message::Ping(ping));
-//     act.clientWriter.pong("Pong from BookDepthActor");
+//     act.client_writer.pong("Pong from BookDepthActor");
 //     act.hb(ctx)
 //     // client should check for a timeout here, similar to server code
 // }
@@ -70,7 +69,7 @@ impl Handler<ClientCommand> for BookDepthActor {
     type Result = ();
 
     fn handle(&mut self, command: ClientCommand, ctx: &mut Context<Self>) {
-        self.clientWriter.text(command.0)
+        self.client_writer.text(command.0)
     }
 }
 
@@ -80,8 +79,9 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for BookDepthActor {
     fn handle(&mut self, msg: ws::Message, ctx: &mut Context<Self>) {
         match msg {
             ws::Message::Text(txt) => {
-                let order_book = serde_json::from_str::<BookDepthData>(&txt).unwrap();
-                println!("{}", order_book);
+                let order_book: BookDepthData = serde_json::from_str::<BookDepthData>(&txt).unwrap();
+                println!("{:?}", order_book);
+                println!("{:#}", order_book);
                 // println!("{:?}", txt);
             },
             ws::Message::Ping(ping) => {
@@ -105,19 +105,20 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for BookDepthActor {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BookDepthData {
     #[serde(rename = "e")]
-    pub event: String,       // Event type
+    pub event: String,        // Event type
     #[serde(rename = "E")]
-    pub event_time: UtcTime, // Event time
+    #[serde(deserialize_with="deserialize_as_naive_date_time")]
+    pub event_time: NaiveDateTime,  // Event time
     #[serde(rename = "s")]
-    pub symbol: String,      // Symbol
+    pub symbol: CurrencyPair, // Symbol
     #[serde(rename = "U")]
-    pub update_first: u64,   // First update ID in event
+    pub update_first: u64,    // First update ID in event
     #[serde(rename = "u")]
-    pub update_final: u64,   // Final update ID in event
+    pub update_final: u64,    // Final update ID in event
     #[serde(rename = "b")]
-    pub bids: Vec<Quote>,    // Bids to be updated
+    pub bids: Vec<Quote>,     // Bids to be updated
     #[serde(rename = "a")]
-    pub asks: Vec<Quote>,    // Asks to be updated
+    pub asks: Vec<Quote>,     // Asks to be updated
 }
 
 impl fmt::Display for BookDepthData {
@@ -195,7 +196,7 @@ impl<'de> Deserialize<'de> for StringOrVec {
                 Ok(StringOrVec::Price(value.to_owned().parse::<f64>().unwrap()))
             }
 
-            fn visit_seq<S>(self, mut visitor: S) -> Result<Self::Value, S::Error>
+            fn visit_seq<S>(self, visitor: S) -> Result<Self::Value, S::Error>
                 where S: de::SeqAccess<'de>
             {
                 // Ignore empty lists from Binance

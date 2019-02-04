@@ -1,53 +1,72 @@
 
-extern crate actix;
-extern crate actix_web;
-extern crate futures;
-
 
 use actix::*;
 use actix_web::ws;
 use futures::Future;
 
-mod book_depth;
+
+pub mod currency_pairs;
+use currency_pairs::{ CurrencyPair, CurrencyPrice, CurrencyBase };
+
+pub mod book_depth;
 use book_depth::{ BookDepthActor, ClientCommand };
 
-mod aggregate_trade;
+pub mod aggregate_trade;
 use aggregate_trade::{ AggregateTradeActor };
 
-mod currency_pairs;
-use currency_pairs::{ CurrencyPair, Price };
-
-mod trade;
+pub mod trade;
 use trade::{ TradeActor };
 
+pub mod kline;
+use kline::{ KlineActor, KlineInterval };
 
 
 
 
-pub fn main(CONNECTION: &str) {
+pub fn main() {
 
     // let url = "https://api.binance.com/api/v3/ticker/price";
-    // let mut jsond = reqwest::get(url).unwrap()
-    //     .json::<Vec<Price>>().unwrap();
+    // let mut jsond: Vec<CurrencyPrice> = reqwest::get(url).unwrap()
+    //     .json::<Vec<CurrencyPrice>>().unwrap();
     //
-    // for p in &jsond[..10] {
-    //     println!("{}", &p.symbol);
+    // let fitler: Vec<CurrencyPrice> = jsond.into_iter()
+    //     .filter(|x| x.symbol.filter_base_pair(CurrencyBase::ETH)).collect();
+    // println!("{:?}\nOnly ETH base pairs", fitler);
+
+    // for p in &jsond {
+    //     match p.symbol {
+    //         CurrencyPair::ETHBTC => println!("{:?}", p.symbol),
+    //         _ => continue,
+    //     }
     //     // println!("{}: url: {}", &p.symbol, format!("wss://stream.binance.com:9443/ws/{}@depth", p.symbol));
     // }
-
 
     let sys = actix::System::new("ws-binance");
     // spawn_aggregate_trade_client(CurrencyPair::ETHBTC);
     // spawn_book_depth_client(CurrencyPair::ETHBTC);
     spawn_trade_client(CurrencyPair::ETHBTC);
+    // spawn_kline_client(CurrencyPair::ETHBTC, KlineInterval::_1m);
     let _ = sys.run();
+
+    // let connection = establish_connection_pg();
+    // let results = posts.filter(published.eq(true))
+    //     .limit(5)
+    //     .load::<Post>(&connection)
+    //     .expect("Error loading posts");
+    //
+    // println!("Displaying {} posts", results.len());
+    // for post in results {
+    //     println!("\n{}", post.title);
+    //     println!("-------\n");
+    //     println!("{}\n", post.body);
+    // }
 
 }
 
 
-pub fn spawn_book_depth_client(CurrencyPair: CurrencyPair) {
+pub fn spawn_book_depth_client(currency_pair: CurrencyPair) {
 
-    let ws_url = format!("wss://stream.binance.com:9443/ws/{}@depth", CurrencyPair);
+    let ws_url = format!("wss://stream.binance.com:9443/ws/{}@depth", currency_pair);
     println!("Endpoint: {}", ws_url);
 
     actix::Arbiter::spawn(
@@ -58,16 +77,16 @@ pub fn spawn_book_depth_client(CurrencyPair: CurrencyPair) {
             // create an actor
             let addr = BookDepthActor::create(|ctx| {
                 BookDepthActor::add_stream(reader, ctx);
-                BookDepthActor { clientWriter: writer }
+                BookDepthActor { client_writer: writer }
             });
         })
     );
 }
 
 
-pub fn spawn_aggregate_trade_client(CurrencyPair: CurrencyPair) {
+pub fn spawn_aggregate_trade_client(currency_pair: CurrencyPair) {
 
-    let ws_url = format!("wss://stream.binance.com:9443/ws/{}@aggTrade", CurrencyPair);
+    let ws_url = format!("wss://stream.binance.com:9443/ws/{}@aggTrade", currency_pair);
     println!("Endpoint: {}", ws_url);
 
     actix::Arbiter::spawn(
@@ -78,7 +97,7 @@ pub fn spawn_aggregate_trade_client(CurrencyPair: CurrencyPair) {
             // create an actor
             let addr = AggregateTradeActor::create(|ctx| {
                 AggregateTradeActor::add_stream(reader, ctx);
-                AggregateTradeActor { clientWriter: writer }
+                AggregateTradeActor { client_writer: writer }
             });
             // spawn a new thread and console loop for new actor
             std::thread::spawn(move || loop {
@@ -94,9 +113,9 @@ pub fn spawn_aggregate_trade_client(CurrencyPair: CurrencyPair) {
 }
 
 
-pub fn spawn_trade_client(CurrencyPair: CurrencyPair) {
+pub fn spawn_trade_client(currency_pair: CurrencyPair) {
 
-    let ws_url = format!("wss://stream.binance.com:9443/ws/{}@trade", CurrencyPair);
+    let ws_url = format!("wss://stream.binance.com:9443/ws/{}@trade", currency_pair);
     println!("Endpoint: {}", ws_url);
 
     actix::Arbiter::spawn(
@@ -107,11 +126,30 @@ pub fn spawn_trade_client(CurrencyPair: CurrencyPair) {
             // create an actor
             let addr = TradeActor::create(|ctx| {
                 TradeActor::add_stream(reader, ctx);
-                TradeActor { clientWriter: writer }
+                TradeActor { client_writer: writer }
             });
         })
     );
 }
 
+
+fn spawn_kline_client(currency_pair: CurrencyPair, interval: KlineInterval) {
+
+    let ws_url = format!("wss://stream.binance.com:9443/ws/{}@kline_{}", currency_pair, interval);
+    println!("Endpoint: {}", ws_url);
+
+    actix::Arbiter::spawn(
+        ws::Client::new(ws_url)              // Instantiate ws client  -> ws::Client
+        .connect()                           // Do websocket handshake -> ws::ClientHandshake
+        .map_err(|e| panic!("Error: {}", e)) // requires use futures::Future;
+        .map(|(reader, writer): (ws::ClientReader, ws::ClientWriter)| {
+            // create an actor
+            let addr = KlineActor::create(|ctx| {
+                KlineActor::add_stream(reader, ctx);
+                KlineActor { client_writer: writer }
+            });
+        })
+    );
+}
 
 

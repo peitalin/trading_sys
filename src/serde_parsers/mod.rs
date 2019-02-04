@@ -3,6 +3,8 @@
 use std::fmt;
 use serde::de;
 use serde::de::{Deserialize, Deserializer, Error, SeqAccess, Unexpected, Visitor};
+use serde_derive::*;
+
 
 ///////////////////////////////////////////////////////////////////////////
 /// Deserializers
@@ -56,43 +58,80 @@ pub fn deserialize_as_maybe_f64<'de, D>(deserializer: D) -> Result<Option<f64>, 
     deserializer.deserialize_any(F64Visitor)
 }
 
+pub fn deserialize_as_f32<'de, D>(deserializer: D) -> Result<f32, D::Error>
+    where D: de::Deserializer<'de>
+{
+    // define a visitor that deserializes String to f32
+    struct F32Visitor;
 
-pub struct Time(pub chrono::NaiveDateTime);
+    impl<'de> de::Visitor<'de> for F32Visitor {
+        type Value = f32;
 
-impl<'de> Deserialize<'de> for Time {
-    fn deserialize<D>(deserializer: D) -> Result<Time, D::Error>
-    where D: Deserializer<'de>
-    {
-        let d: String = Deserialize::deserialize(deserializer)?;
-        let date = chrono::NaiveDateTime::parse_from_str(&d, "%Y-%m-%dT%H:%M:%SZ").unwrap();
-        Ok(Time(date))
+        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            formatter.write_str("a string containing f32 data")
+        }
+
+        fn visit_str<E>(self, v: &str) -> Result<Self::Value, E> where E: de::Error {
+            // convert to f32
+            Ok(serde_json::from_str(v).unwrap())
+        }
     }
+    // use our visitor to deserialize
+    deserializer.deserialize_any(F32Visitor)
 }
 
-/// Implement traits fors UtcTime data structure
-/// Used for serde_json to deserialize Unix timestamps (int)
-/// into chrono::DateTime types
-#[derive(Debug, Serialize, Clone)]
-pub struct UtcTime(chrono::DateTime<chrono::Utc>);
 
-impl<'de> Deserialize<'de> for UtcTime {
-    fn deserialize<D>(deserializer: D) -> Result<UtcTime, D::Error>
-    where D: Deserializer<'de>
-    {
-        let d: i64 = Deserialize::deserialize(deserializer)?;
-        let naive = chrono::NaiveDateTime::from_timestamp(d/1000, 0);
-        // Create a normal DateTime from the NaiveDateTime
-        let datetime = chrono::DateTime::from_utc(naive, chrono::Utc);
-        // // Format the datetime how you want
-        // let newdate = datetime.format("%Y-%m-%d %H:%M:%S");
-        Ok(UtcTime(datetime))
+pub fn deserialize_as_naive_date_time<'de, D>(deserializer: D) -> Result<chrono::NaiveDateTime, D::Error>
+    where D: de::Deserializer<'de>
+{
+    // define a visitor that deserializes String or i64 to NaiveDateTime
+    struct NaiveDateTimeVisitor;
+
+    impl<'de> de::Visitor<'de> for NaiveDateTimeVisitor {
+        type Value = chrono::NaiveDateTime;
+
+        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            formatter.write_str("a string, i64, u64, or f64 containing timestamp data.")
+        }
+
+        fn visit_i64<E>(self, timestamp: i64) -> Result<Self::Value, E> where E: de::Error {
+            // convert to NaiveDateTime
+            assert!(timestamp > 1_000_000_000); // Binance timestamps are in milliseconds
+            // check that you're not getting timestamps in seconds format.
+            // otheriwse you'll overstate milliseconds
+            let millisecs = (timestamp % 1000) * 1_000_000;
+            // Multiply by 1_000_000 to get Nanoseconds for `from_timestamp(...)`
+            // from_timestamp(secs: i64, nsecs: u32) -> NaiveDateTime
+            Ok(chrono::NaiveDateTime::from_timestamp(timestamp / 1_000, millisecs as u32))
+        }
+
+        fn visit_u64<E>(self, timestamp: u64) -> Result<Self::Value, E> where E: de::Error {
+            // convert to NaiveDateTime
+            assert!(timestamp > 1_000_000_000); // Binance timestamps are in milliseconds
+            let millisecs = (timestamp % 1000) * 1_000_000;
+            Ok(chrono::NaiveDateTime::from_timestamp(timestamp as i64 / 1_000, millisecs as u32))
+        }
+
+        fn visit_f64<E>(self, timestamp: f64) -> Result<Self::Value, E> where E: de::Error {
+            // convert to NaiveDateTime
+            assert!(timestamp > 1_000_000_000.0); // Binance timestamps are in milliseconds
+            let millisecs = ((timestamp as i64) % 1000) * 1_000_000;
+            Ok(chrono::NaiveDateTime::from_timestamp(timestamp as i64 / 1_000, millisecs as u32))
+        }
+
+        fn visit_str<E>(self, s: &str) -> Result<Self::Value, E> where E: de::Error {
+            // convert to NaiveDateTime
+            let timestamp: i64 = s.parse::<i64>().unwrap();
+            assert!(timestamp > 1_000_000_000); // Binance timestamps are in milliseconds
+            let millisecs = (timestamp % 1000) * 1_000_000;
+            Ok(chrono::NaiveDateTime::from_timestamp(timestamp as i64 / 1_000, millisecs as u32))
+        }
     }
+    // use our visitor to deserialize
+    deserializer.deserialize_any(NaiveDateTimeVisitor)
 }
 
-impl fmt::Display for UtcTime {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let datetime = self.0;
-        let newdate = datetime.format("%Y-%m-%d %H:%M:%S");
-        write!(f, "{}", newdate)
-    }
-}
+// let d: i64 = Deserialize::deserialize(input)?;
+// let naive = chrono::NaiveDateTime::from_timestamp(d/1000, 0);
+// // Create a normal DateTime from the NaiveDateTime
+// let datetime = chrono::DateTime::from_utc(naive, chrono::Utc);
