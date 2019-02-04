@@ -15,14 +15,9 @@ extern crate reqwest;
 extern crate ring;
 extern crate data_encoding;
 
-#[macro_use]
-extern crate diesel;
-extern crate dotenv;
 extern crate redis;
 
 extern crate trading_sys;
-
-use trading_sys::binance;
 
 use std::fmt;
 use ring::{ digest, hmac };
@@ -33,8 +28,6 @@ fn main() -> std::io::Result<()> {
 
     // Setup logging
     env_logger::init();
-    binance::main();
-
 
     // // The AP endpoint. The address where the datafeed can be accessed via the web
     // let url = "https://api.binance.com/wapi/v3/depositHistory.html";
@@ -58,9 +51,13 @@ fn main() -> std::io::Result<()> {
     // // println!("response: {:?}", &response.text().unwrap());
     // Ok(())
 
-    // let client = redis::Client::open("redis://127.0.0.1/").unwrap();
-    // let conn = client.get_connection().unwrap();
-    // redis_get(&conn);
+    // std::process::Command::new("redis-server")
+    //     .output()
+    //     .expect("redis-server not installed properly");
+
+    let client = redis::Client::open("redis://127.0.0.1/").unwrap();
+    let conn = client.get_connection().unwrap();
+    redis_get(&conn);
 
     Ok(())
 

@@ -6,8 +6,8 @@ use chrono::NaiveDateTime;
 
 use serde::de;
 use serde::de::{ Deserialize, Deserializer };
-use crate::serde_parsers::{ deserialize_as_naive_date_time };
-use super::currency_pairs::CurrencyPair;
+use trading_sys::serde_parsers::{ deserialize_as_naive_date_time };
+use trading_sys::currency_pairs::CurrencyPair;
 
 use actix_web::ws;
 use actix::*;

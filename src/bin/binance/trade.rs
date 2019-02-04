@@ -1,8 +1,10 @@
 
 
-use crate::establish_connection_pg;
-use crate::db_actions::{ create_trade };
-use crate::models::TradeData;
+use trading_sys::{
+    establish_connection_pg,
+    create_trade,
+};
+use trading_sys::models::TradeData;
 
 use std::time::Duration;
 

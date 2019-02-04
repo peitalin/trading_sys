@@ -34,8 +34,7 @@ extern crate redis;
 pub mod schema;
 pub mod models;
 pub mod serde_parsers;
-pub mod binance;
-pub mod db_actions;
+pub mod currency_pairs;
 
 
 use diesel::prelude::*;

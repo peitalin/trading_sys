@@ -8,7 +8,7 @@ use crate::serde_parsers::{
     deserialize_as_f64,
     deserialize_as_f32
 };
-use crate::binance::currency_pairs::{ CurrencyPair };
+use crate::currency_pairs::{ CurrencyPair };
 
 
 #[derive(Queryable)]

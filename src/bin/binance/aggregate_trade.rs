@@ -4,7 +4,7 @@ use std::fmt;
 use std::time::Duration;
 use chrono::NaiveDateTime;
 
-use crate::serde_parsers::{ deserialize_as_f64 };
+use trading_sys::serde_parsers::{ deserialize_as_f64 };
 
 use actix_web::ws;
 use actix::*;

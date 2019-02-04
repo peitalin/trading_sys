@@ -1,12 +1,20 @@
 
 
+#![allow(unused_variables)]
+extern crate chrono;
+extern crate clap;
+
+#[macro_use]
+extern crate serde_derive;
+extern crate serde_json;
+extern crate serde;
+
 use actix::*;
 use actix_web::ws;
 use futures::Future;
 
-
-pub mod currency_pairs;
-use currency_pairs::{ CurrencyPair, CurrencyPrice, CurrencyBase };
+extern crate trading_sys;
+use trading_sys::currency_pairs::{ CurrencyPair, CurrencyPrice, CurrencyBase };
 
 pub mod book_depth;
 use book_depth::{ BookDepthActor, ClientCommand };
