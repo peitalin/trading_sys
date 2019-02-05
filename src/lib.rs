@@ -30,6 +30,8 @@ extern crate diesel;
 extern crate dotenv;
 extern crate redis;
 
+extern crate uuid;
+
 // pub mod coinmarketcap;
 pub mod currency_pairs;
 pub mod models;
@@ -86,9 +88,11 @@ pub fn create_aggregate_trade<'a>(conn: &PgConnection, aggregate_trade_data: &Ag
 }
 
 
-pub fn create_book_depth<'a>(conn: &PgConnection, book_depth_data: &BookDepthData) {
+pub fn create_book_depth<'a>(conn: &PgConnection, book_depth_data: BookDepthData) {
     use crate::schema::book_depth; // DB table name
     use diesel::prelude::*; // .get_result trait
+    use uuid::Uuid;
+    use crate::models::BookDepthData;
 
     let res = diesel::insert_into(book_depth::table)
         .values(book_depth_data)

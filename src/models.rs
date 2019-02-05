@@ -101,10 +101,8 @@ impl fmt::Display for AggregateTradeData {
 }
 
 
-use std::collections::HashMap;
 
-///////////////////////////////////////////////////////////////////////////////
-#[derive(Debug, Queryable)]
+#[derive(Queryable)]
 pub struct BookDepthDataQuery {
     pub id: i32,
     pub event: String, // Event type
@@ -121,7 +119,6 @@ pub struct BookDepthDataQuery {
 #[derive(Debug, Serialize, Deserialize, Queryable, Insertable)]
 #[table_name = "book_depth"]
 pub struct BookDepthData {
-    pub id: i32,
     #[serde(rename = "e")]
     pub event: String, // Event type
     #[serde(rename = "E")]
@@ -170,7 +167,7 @@ impl<'de> Deserialize<'de> for Quote {
             fn visit_map<M>(self, mut dict: M) -> Result<Self::Value, M::Error>
             where M: de::MapAccess<'de>,
             {
-                let mut h: HashMap<String, f32> = std::collections::HashMap::new();
+                let mut h: std::collections::HashMap<String, f32> = std::collections::HashMap::new();
                 loop {
                     match dict.next_entry()? {
                         Some((key, val)) => { h.insert(key, val); },
@@ -246,12 +243,10 @@ impl<'de> Deserialize<'de> for StringOrVec {
 
 
 
-use diesel::deserialize::Queryable;
 use diesel::sql_types::Jsonb;
 use diesel::serialize::{ToSql, Output};
-use diesel::deserialize::{FromSql};
-use diesel::pg::{ Pg, PgConnection };
-use serde_json::Value;
+use diesel::deserialize::FromSql;
+use diesel::pg::Pg;
 
 impl ToSql<Jsonb, Pg> for Quote {
     fn to_sql<W: std::io::Write>(&self, out: &mut Output<W, Pg>) -> diesel::serialize::Result {
@@ -271,32 +266,6 @@ impl FromSql<Jsonb, Pg> for Quote {
 }
 
 
-// impl Queryable<book_depth::SqlType, diesel::pg::Pg> for Quote {
-//     type Row = (
-//         i32,
-//         String,
-//         NaiveDateTime,
-//         CurrencyPair,
-//         i32,
-//         i32,
-//         Vec<Quote>,
-//         Vec<Quote>
-//     );
-//
-//     fn build(row: Self::Row) -> Self {
-//         Quote {
-//             trade_id: row.0,        // Trade ID
-//             event: row.1,           // Event type
-//             event_time: row.2,      // Event time
-//             symbol: row.3,          // Symbol
-//             price: row.4,           // Price
-//             quantity: row.5,        // Quantity
-//             buyer_order_id: row.6,  // Buyer order ID
-//             seller_order_id: row.7, // Seller order ID
-//             buyer_mkt_maker: row.8, //  is buyer the market maker?
-//         }
-//     }
-// }
 
 
 ///////////////////////////////////////////////////////////////////////////////

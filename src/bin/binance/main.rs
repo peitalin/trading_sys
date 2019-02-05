@@ -66,19 +66,16 @@ pub fn main() {
 
 fn get_book_depth_from_postgres() {
     use diesel::prelude::*;
-    use trading_sys::models::BookDepthData;
+    use trading_sys::models::BookDepthDataQuery;
     use trading_sys::schema::book_depth::dsl::*; // .get_result trait
 
     let connection = trading_sys::establish_connection_pg();
 
     println!("{:?}", book_depth);
-    let results = match book_depth
-        .load::<BookDepthData>(&connection) {
-            Ok(s) => s,
-            Err(e) => panic!("BookDepthData Error: {:?}", e),
-        };
-
-    // println!("Displaying {:?} trades, each greater than 1.0 ETH", results);
+    let results = book_depth
+        .limit(6)
+        .load::<BookDepthDataQuery>(&connection)
+        .expect("Error in deserializing Jsonb to BookDepthDataQuery.");
 
     for trade_result in results {
         println!("\n{}", trade_result.event_time);

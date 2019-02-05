@@ -74,9 +74,9 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for BookDepthActor {
         match msg {
             ws::Message::Text(txt) => {
                 let book_depth_data: BookDepthData = serde_json::from_str::<BookDepthData>(&txt).unwrap();
+                println!("{:?}", &book_depth_data);
                 let connection = establish_connection_pg();
-                create_book_depth(&connection, &book_depth_data);
-                println!("{:?}", book_depth_data);
+                create_book_depth(&connection, book_depth_data);
             }
             ws::Message::Ping(ping) => {
                 ctx.run_later(Duration::new(0, 0), |act, ctx| act.handle_ping(ctx, ping));
