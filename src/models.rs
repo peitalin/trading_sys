@@ -1,19 +1,15 @@
-use std::fmt;
 use chrono::NaiveDateTime;
 use serde::de;
 use serde::de::{Deserialize, Deserializer};
+use std::fmt;
 
 use crate::currency_pairs::CurrencyPair;
-use crate::serde_parsers::{
-    deserialize_as_f32, deserialize_as_naive_date_time,
-};
+use crate::serde_parsers::{deserialize_as_f32, deserialize_as_naive_date_time};
 
-use crate::schema::posts;
-use crate::schema::trades;
 use crate::schema::aggregate_trades;
 use crate::schema::book_depth;
-
-
+use crate::schema::posts;
+use crate::schema::trades;
 
 #[derive(Queryable)]
 pub struct Post {
@@ -28,7 +24,6 @@ pub struct NewPost<'a> {
     pub title: &'a str,
     pub body: &'a str,
 }
-
 
 #[derive(Debug, Serialize, Deserialize, Queryable, Insertable)]
 #[table_name = "trades"]
@@ -61,7 +56,6 @@ impl std::fmt::Display for TradeData {
         write!(f, "{}", self)
     }
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////
 #[derive(Debug, Serialize, Deserialize, Queryable, Insertable)]
@@ -100,20 +94,17 @@ impl fmt::Display for AggregateTradeData {
     }
 }
 
-
-
 #[derive(Queryable)]
 pub struct BookDepthDataQuery {
     pub id: i32,
-    pub event: String, // Event type
+    pub event: String,             // Event type
     pub event_time: NaiveDateTime, // Event time
-    pub symbol: CurrencyPair, // Symbol
-    pub update_first: i32, // First update ID in event
-    pub update_final: i32, // Final update ID in event
-    pub bids: Vec<Quote>, // Bids to be updated
-    pub asks: Vec<Quote>, // Asks to be updated
+    pub symbol: CurrencyPair,      // Symbol
+    pub update_first: i32,         // First update ID in event
+    pub update_final: i32,         // Final update ID in event
+    pub bids: Vec<Quote>,          // Bids to be updated
+    pub asks: Vec<Quote>,          // Asks to be updated
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////
 #[derive(Debug, Serialize, Deserialize, Queryable, Insertable)]
@@ -165,18 +156,22 @@ impl<'de> Deserialize<'de> for Quote {
             }
 
             fn visit_map<M>(self, mut dict: M) -> Result<Self::Value, M::Error>
-            where M: de::MapAccess<'de>,
+            where
+                M: de::MapAccess<'de>,
             {
-                let mut h: std::collections::HashMap<String, f32> = std::collections::HashMap::new();
+                let mut h: std::collections::HashMap<String, f32> =
+                    std::collections::HashMap::new();
                 loop {
                     match dict.next_entry()? {
-                        Some((key, val)) => { h.insert(key, val); },
+                        Some((key, val)) => {
+                            h.insert(key, val);
+                        }
                         None => break,
                     }
                 }
                 Ok(Quote {
                     price: *h.get("price").unwrap(),
-                    quantity: *h.get("quantity").unwrap()
+                    quantity: *h.get("quantity").unwrap(),
                 })
             }
 
@@ -225,13 +220,15 @@ impl<'de> Deserialize<'de> for StringOrVec {
             }
 
             fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
-            where E: de::Error,
+            where
+                E: de::Error,
             {
                 Ok(StringOrVec::Price(value.to_owned().parse::<f32>().unwrap()))
             }
 
             fn visit_seq<S>(self, visitor: S) -> Result<Self::Value, S::Error>
-            where S: de::SeqAccess<'de>,
+            where
+                S: de::SeqAccess<'de>,
             {
                 // Ignore empty lists from Binance
                 Ok(StringOrVec::Vec(None))
@@ -241,12 +238,10 @@ impl<'de> Deserialize<'de> for StringOrVec {
     }
 }
 
-
-
-use diesel::sql_types::Jsonb;
-use diesel::serialize::{ToSql, Output};
 use diesel::deserialize::FromSql;
 use diesel::pg::Pg;
+use diesel::serialize::{Output, ToSql};
+use diesel::sql_types::Jsonb;
 
 impl ToSql<Jsonb, Pg> for Quote {
     fn to_sql<W: std::io::Write>(&self, out: &mut Output<W, Pg>) -> diesel::serialize::Result {
@@ -264,9 +259,6 @@ impl FromSql<Jsonb, Pg> for Quote {
         Ok(jsond)
     }
 }
-
-
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // #[derive(FromSqlRow)]

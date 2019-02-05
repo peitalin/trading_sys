@@ -49,9 +49,4 @@ table! {
     }
 }
 
-allow_tables_to_appear_in_same_query!(
-    aggregate_trades,
-    book_depth,
-    posts,
-    trades,
-);
+allow_tables_to_appear_in_same_query!(aggregate_trades, book_depth, posts, trades,);

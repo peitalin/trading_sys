@@ -26,13 +26,10 @@ use trade_actor::TradeActor;
 pub mod kline_actor;
 use kline_actor::{KlineActor, KlineInterval};
 
-
-
 pub fn binance_api_url(query: String) -> String {
     let api_url = "wss://stream.binance.com:9443/ws/";
     format!("{api_url}{query}", api_url = api_url, query = query)
 }
-
 
 pub fn main() {
     // let url = "https://api.binance.com/api/v3/ticker/price";
@@ -61,7 +58,6 @@ pub fn main() {
     // spawn_kline_client(CurrencyPair::ETHBTC, KlineInterval::_1m);
 
     let _ = sys.run();
-
 }
 
 fn get_book_depth_from_postgres() {
@@ -119,9 +115,7 @@ fn get_trades_from_postgres() {
     }
 }
 
-
 pub fn spawn_book_depth_client(currency_pair: CurrencyPair) {
-
     let ws_url = binance_api_url(format!("{}@depth", currency_pair));
     println!("Endpoint: {}", ws_url);
 
@@ -142,7 +136,6 @@ pub fn spawn_book_depth_client(currency_pair: CurrencyPair) {
 }
 
 pub fn spawn_aggregate_trade_client(currency_pair: CurrencyPair) {
-
     let ws_url = binance_api_url(format!("{}@aggTrade", currency_pair));
     println!("Endpoint: {}", ws_url);
 
@@ -172,7 +165,6 @@ pub fn spawn_aggregate_trade_client(currency_pair: CurrencyPair) {
 }
 
 pub fn spawn_trade_client(currency_pair: CurrencyPair) {
-
     let ws_url = binance_api_url(format!("{}@trade", currency_pair));
     println!("Endpoint: {}", ws_url);
 
@@ -193,7 +185,6 @@ pub fn spawn_trade_client(currency_pair: CurrencyPair) {
 }
 
 fn spawn_kline_client(currency_pair: CurrencyPair, interval: KlineInterval) {
-
     let ws_url = binance_api_url(format!("{}@kline_{}", currency_pair, interval));
     println!("Endpoint: {}", ws_url);
 

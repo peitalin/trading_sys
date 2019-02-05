@@ -38,15 +38,9 @@ pub mod models;
 pub mod schema;
 pub mod serde_parsers;
 
-use crate::models::{
-    TradeData,
-    AggregateTradeData,
-    BookDepthData
-};
+use crate::models::{AggregateTradeData, BookDepthData, TradeData};
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
-
-
 
 pub fn establish_connection_pg() -> PgConnection {
     dotenv::dotenv().ok();
@@ -55,8 +49,6 @@ pub fn establish_connection_pg() -> PgConnection {
 
     PgConnection::establish(&database_url).expect(&format!("Error connecting to {}", database_url))
 }
-
-
 
 pub fn create_trade<'a>(conn: &PgConnection, trade_data: &TradeData) {
     use crate::schema::trades;
@@ -74,8 +66,6 @@ pub fn create_trade<'a>(conn: &PgConnection, trade_data: &TradeData) {
     println!("Database write result: {:?}\n", res);
 }
 
-
-
 pub fn create_aggregate_trade<'a>(conn: &PgConnection, aggregate_trade_data: &AggregateTradeData) {
     use crate::schema::aggregate_trades; // DB table name
     use diesel::prelude::*; // .get_result trait
@@ -87,12 +77,11 @@ pub fn create_aggregate_trade<'a>(conn: &PgConnection, aggregate_trade_data: &Ag
     println!("Database write result: {:?}\n", res);
 }
 
-
 pub fn create_book_depth<'a>(conn: &PgConnection, book_depth_data: BookDepthData) {
+    use crate::models::BookDepthData;
     use crate::schema::book_depth; // DB table name
     use diesel::prelude::*; // .get_result trait
     use uuid::Uuid;
-    use crate::models::BookDepthData;
 
     let res = diesel::insert_into(book_depth::table)
         .values(book_depth_data)

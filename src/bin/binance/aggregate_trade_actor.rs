@@ -1,9 +1,9 @@
 use trading_sys::models::AggregateTradeData;
 use trading_sys::{create_aggregate_trade, establish_connection_pg};
 
-use std::time::Duration;
 use actix::*;
 use actix_web::ws;
+use std::time::Duration;
 
 pub struct AggregateTradeActor {
     pub client_writer: ws::ClientWriter,
@@ -57,7 +57,8 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for AggregateTradeActor {
     fn handle(&mut self, msg: ws::Message, ctx: &mut Context<Self>) {
         match msg {
             ws::Message::Text(txt) => {
-                let aggregate_trade_data = serde_json::from_str::<AggregateTradeData>(&txt).unwrap();
+                let aggregate_trade_data =
+                    serde_json::from_str::<AggregateTradeData>(&txt).unwrap();
                 let connection = establish_connection_pg();
                 create_aggregate_trade(&connection, &aggregate_trade_data);
                 println!("{}", aggregate_trade_data);
@@ -78,4 +79,3 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for AggregateTradeActor {
         ctx.stop()
     }
 }
-

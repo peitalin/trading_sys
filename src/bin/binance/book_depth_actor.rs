@@ -73,7 +73,8 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for BookDepthActor {
     fn handle(&mut self, msg: ws::Message, ctx: &mut Context<Self>) {
         match msg {
             ws::Message::Text(txt) => {
-                let book_depth_data: BookDepthData = serde_json::from_str::<BookDepthData>(&txt).unwrap();
+                let book_depth_data: BookDepthData =
+                    serde_json::from_str::<BookDepthData>(&txt).unwrap();
                 println!("{:?}", &book_depth_data);
                 let connection = establish_connection_pg();
                 create_book_depth(&connection, book_depth_data);
@@ -94,5 +95,3 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for BookDepthActor {
         ctx.stop()
     }
 }
-
-
