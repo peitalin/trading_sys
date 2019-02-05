@@ -1,4 +1,4 @@
-use trading_sys::models::TradeDataInsert;
+use trading_sys::models::TradeData;
 use trading_sys::{create_trade, establish_connection_pg};
 
 use std::time::Duration;
@@ -59,8 +59,7 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for TradeActor {
     fn handle(&mut self, msg: ws::Message, ctx: &mut Context<Self>) {
         match msg {
             ws::Message::Text(txt) => {
-                let trade_data: TradeDataInsert =
-                    serde_json::from_str::<TradeDataInsert>(&txt).unwrap();
+                let trade_data: TradeData = serde_json::from_str::<TradeData>(&txt).unwrap();
 
                 let connection = establish_connection_pg();
                 create_trade(&connection, &trade_data);

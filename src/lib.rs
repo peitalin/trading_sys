@@ -7,6 +7,7 @@ extern crate scraper;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde;
+#[macro_use]
 extern crate serde_json;
 
 #[macro_use]
@@ -35,9 +36,15 @@ pub mod models;
 pub mod schema;
 pub mod serde_parsers;
 
-use crate::models::TradeDataInsert;
+use crate::models::{
+    TradeData,
+    AggregateTradeData,
+    BookDepthData
+};
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
+
+
 
 pub fn establish_connection_pg() -> PgConnection {
     dotenv::dotenv().ok();
@@ -47,7 +54,9 @@ pub fn establish_connection_pg() -> PgConnection {
     PgConnection::establish(&database_url).expect(&format!("Error connecting to {}", database_url))
 }
 
-pub fn create_trade<'a>(conn: &PgConnection, trade_data: &TradeDataInsert) {
+
+
+pub fn create_trade<'a>(conn: &PgConnection, trade_data: &TradeData) {
     use crate::schema::trades;
     use diesel::prelude::*; // .get_result trait
 
@@ -59,6 +68,31 @@ pub fn create_trade<'a>(conn: &PgConnection, trade_data: &TradeDataInsert) {
     //     .values(trade_data)
     //     .get_result(conn)
     //     .expect("Error saving new trade");
+
+    println!("Database write result: {:?}\n", res);
+}
+
+
+
+pub fn create_aggregate_trade<'a>(conn: &PgConnection, aggregate_trade_data: &AggregateTradeData) {
+    use crate::schema::aggregate_trades; // DB table name
+    use diesel::prelude::*; // .get_result trait
+
+    let res = diesel::insert_into(aggregate_trades::table)
+        .values(aggregate_trade_data)
+        .execute(conn);
+
+    println!("Database write result: {:?}\n", res);
+}
+
+
+pub fn create_book_depth<'a>(conn: &PgConnection, book_depth_data: &BookDepthData) {
+    use crate::schema::book_depth; // DB table name
+    use diesel::prelude::*; // .get_result trait
+
+    let res = diesel::insert_into(book_depth::table)
+        .values(book_depth_data)
+        .execute(conn);
 
     println!("Database write result: {:?}\n", res);
 }
