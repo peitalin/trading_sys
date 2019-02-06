@@ -2,7 +2,7 @@ use chrono::NaiveDateTime;
 use std::fmt;
 use std::time::Duration;
 
-use trading_sys::models::BookDepthData;
+use trading_sys::models::book_depth::BookDepthData;
 use trading_sys::{create_book_depth, establish_connection_pg};
 
 use trading_sys::currency_pairs::CurrencyPair;

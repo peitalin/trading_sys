@@ -27,6 +27,28 @@ table! {
 }
 
 table! {
+    klines (id) {
+        id -> Int4,
+        start_time -> Timestamp,
+        close_time -> Timestamp,
+        symbol -> Text,
+        interval -> Text,
+        first_trade_id -> Int4,
+        last_trade_id -> Int4,
+        open -> Float4,
+        close -> Float4,
+        high -> Float4,
+        low -> Float4,
+        volume -> Float4,
+        num_of_trades -> Int4,
+        is_kline_closed -> Bool,
+        quote_asset_vol -> Float4,
+        taker_buy_base_vol -> Float4,
+        taker_buy_quote_vol -> Float4,
+    }
+}
+
+table! {
     posts (id) {
         id -> Int4,
         title -> Varchar,
@@ -49,4 +71,10 @@ table! {
     }
 }
 
-allow_tables_to_appear_in_same_query!(aggregate_trades, book_depth, posts, trades,);
+allow_tables_to_appear_in_same_query!(
+    aggregate_trades,
+    book_depth,
+    klines,
+    posts,
+    trades,
+);

@@ -26,6 +26,7 @@ use trade_actor::TradeActor;
 pub mod kline_actor;
 use kline_actor::{KlineActor, KlineInterval};
 
+
 pub fn binance_api_url(query: String) -> String {
     let api_url = "wss://stream.binance.com:9443/ws/";
     format!("{api_url}{query}", api_url = api_url, query = query)
@@ -50,19 +51,19 @@ pub fn main() {
 
     let sys = actix::System::new("ws-binance");
 
-    get_book_depth_from_postgres();
+    // get_book_depth_from_postgres();
 
     // spawn_aggregate_trade_client(CurrencyPair::ETHBTC);
     // spawn_book_depth_client(CurrencyPair::ETHBTC);
     // spawn_trade_client(CurrencyPair::ETHBTC);
-    // spawn_kline_client(CurrencyPair::ETHBTC, KlineInterval::_1m);
+    spawn_kline_client(CurrencyPair::ETHBTC, KlineInterval::_1m);
 
     let _ = sys.run();
 }
 
 fn get_book_depth_from_postgres() {
     use diesel::prelude::*;
-    use trading_sys::models::BookDepthDataQuery;
+    use trading_sys::models::book_depth::BookDepthDataQuery;
     use trading_sys::schema::book_depth::dsl::*; // .get_result trait
 
     let connection = trading_sys::establish_connection_pg();
@@ -87,7 +88,7 @@ fn get_book_depth_from_postgres() {
 
 fn get_trades_from_postgres() {
     use diesel::prelude::*;
-    use trading_sys::models::TradeData;
+    use trading_sys::models::trades::TradeData;
     use trading_sys::schema::trades::dsl::*; // .get_result trait
 
     let connection = trading_sys::establish_connection_pg();

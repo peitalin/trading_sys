@@ -38,9 +38,14 @@ pub mod models;
 pub mod schema;
 pub mod serde_parsers;
 
-use crate::models::{AggregateTradeData, BookDepthData, TradeData};
+use crate::models::aggregate_trades::{AggregateTradeData};
+use crate::models::book_depth::{BookDepthData, BookDepthDataQuery};
+use crate::models::trades::{TradeData};
+use crate::models::kline::KlineData;
+
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
+
 
 pub fn establish_connection_pg() -> PgConnection {
     dotenv::dotenv().ok();
@@ -78,7 +83,7 @@ pub fn create_aggregate_trade<'a>(conn: &PgConnection, aggregate_trade_data: &Ag
 }
 
 pub fn create_book_depth<'a>(conn: &PgConnection, book_depth_data: BookDepthData) {
-    use crate::models::BookDepthData;
+    use crate::models::book_depth::BookDepthData;
     use crate::schema::book_depth; // DB table name
     use diesel::prelude::*; // .get_result trait
     use uuid::Uuid;
@@ -89,3 +94,17 @@ pub fn create_book_depth<'a>(conn: &PgConnection, book_depth_data: BookDepthData
 
     println!("Database write result: {:?}\n", res);
 }
+
+pub fn create_kline<'a>(conn: &PgConnection, kline_data: KlineData) {
+    use crate::models::kline::KlineData;
+    use crate::schema::klines; // DB table name
+    use diesel::prelude::*;
+
+    let res = diesel::insert_into(klines::table)
+        .values(kline_data)
+        .execute(conn);
+
+    println!("Database write result: {:?}\n", res);
+}
+
+

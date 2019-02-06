@@ -1,4 +1,4 @@
-use trading_sys::models::TradeData;
+use trading_sys::models::trades::TradeData;
 use trading_sys::{create_trade, establish_connection_pg};
 
 use std::time::Duration;

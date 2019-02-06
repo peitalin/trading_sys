@@ -1,4 +1,4 @@
-use trading_sys::models::AggregateTradeData;
+use trading_sys::models::aggregate_trades::AggregateTradeData;
 use trading_sys::{create_aggregate_trade, establish_connection_pg};
 
 use actix::*;
