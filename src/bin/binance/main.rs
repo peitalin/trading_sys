@@ -1,9 +1,11 @@
 
 extern crate chrono;
 extern crate clap;
+
 #[macro_use]
 extern crate serde_derive;
 extern crate serde;
+#[macro_use]
 extern crate serde_json;
 
 extern crate trading_sys;
@@ -30,17 +32,18 @@ use db_actions::{
 
 use trading_sys::currency_pairs::{CurrencyBase, CurrencyPair, CurrencyPrice};
 use trading_sys::models::klines::KlineInterval;
-
+use trading_sys::models::book_depth::DepthLevels;
 
 
 pub fn main() {
     let sys = actix::System::new("ws-binance");
 
     // spawn_aggregate_trade_client(CurrencyPair::ETHBTC);
-    // spawn_book_depth_client(CurrencyPair::ETHBTC);
+    spawn_book_depth_client(CurrencyPair::ETHBTC, Some(DepthLevels::_10));
+    // spawn_book_depth_client(CurrencyPair::ETHBTC, None);
     // spawn_trade_client(CurrencyPair::ETHBTC);
     // spawn_kline_client(CurrencyPair::ETHBTC, KlineInterval::_1m);
-    spawn_mini_ticker_client(CurrencyPair::ETHBTC);
+    // spawn_mini_ticker_client(CurrencyPair::ETHBTC);
 
     // get_book_depth_from_postgres();
     // get_klines_from_postgres();
@@ -49,7 +52,6 @@ pub fn main() {
 
     let _ = sys.run();
 }
-
 
 
 

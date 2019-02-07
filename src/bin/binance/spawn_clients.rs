@@ -4,6 +4,7 @@ use futures::Future;
 
 use trading_sys::currency_pairs::{CurrencyBase, CurrencyPair, CurrencyPrice};
 use trading_sys::models::klines::KlineInterval;
+use trading_sys::models::book_depth::DepthLevels;
 
 use crate::actors::book_depth::BookDepthActor;
 use crate::actors::aggregate_trade::AggregateTradeActor;
@@ -15,7 +16,7 @@ use crate::actors::mini_ticker::MiniTickerActor;
 
 pub fn binance_api_url(query: String) -> String {
     let api_url = "wss://stream.binance.com:9443/ws/";
-    format!("{api_url}{query}", api_url = api_url, query = query)
+    format!("{api_url}{query}", api_url=api_url, query=query)
 }
 
 
@@ -23,8 +24,12 @@ pub fn binance_api_url(query: String) -> String {
 /// Spawn new Actor scraper clients
 /////////////////////////////////////////////////////////////////
 
-pub fn spawn_book_depth_client(currency_pair: CurrencyPair) {
-    let ws_url = binance_api_url(format!("{}@depth", currency_pair));
+pub fn spawn_book_depth_client(currency_pair: CurrencyPair, depth_levels: Option<DepthLevels>) {
+
+    let ws_url = match &depth_levels {
+        None => binance_api_url(format!("{pair}@depth", pair=currency_pair)),
+        Some(lvl) => binance_api_url(format!("{pair}@depth{lvl}", pair=currency_pair, lvl=lvl)),
+    };
     println!("Endpoint: {}", ws_url);
 
     actix::Arbiter::spawn(
@@ -33,10 +38,12 @@ pub fn spawn_book_depth_client(currency_pair: CurrencyPair) {
             .map_err(|e| panic!("Error: {}", e)) // requires use futures::Future;
             .map(|(reader, writer): (ws::ClientReader, ws::ClientWriter)| {
                 // create an actor
-                let addr: actix::Addr<BookDepthActor> = BookDepthActor::create(|ctx| {
+
+                let addr: actix::Addr<BookDepthActor> = BookDepthActor::create(|ctx: &mut Context<BookDepthActor>| {
                     BookDepthActor::add_stream(reader, ctx);
                     BookDepthActor {
                         client_writer: writer,
+                        depth_levels: depth_levels,
                     }
                 });
             })

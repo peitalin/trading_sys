@@ -20,6 +20,21 @@ pub struct BookDepthData {
     pub asks: Vec<Quote>,          // Asks to be updated
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+pub struct PartialBookDepthData {
+    #[serde(rename = "lastUpdateId")]
+    pub last_update_id: i32,       // Last update ID
+    pub bids: Vec<Quote>,          // Bids to be updated
+    pub asks: Vec<Quote>,          // Asks to be updated
+}
+
+impl fmt::Display for PartialBookDepthData {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let pretty_json = serde_json::to_string_pretty(&self).unwrap();
+        write!(f, "{}", pretty_json)
+    }
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 #[derive(Debug, Serialize, Deserialize, Queryable, Insertable)]
 #[table_name = "book_depth"]
@@ -171,3 +186,20 @@ impl FromSql<Jsonb, Pg> for Quote {
         Ok(jsond)
     }
 }
+
+#[derive(Debug, Clone)]
+pub enum DepthLevels {
+    _5,
+    _10,
+    _20,
+}
+impl fmt::Display for DepthLevels {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            _5 => write!(f, "5"),
+            _10 => write!(f, "10"),
+            _20 => write!(f, "20"),
+        }
+    }
+}
+

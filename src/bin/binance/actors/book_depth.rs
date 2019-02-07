@@ -2,7 +2,11 @@ use chrono::NaiveDateTime;
 use std::fmt;
 use std::time::Duration;
 
-use trading_sys::models::book_depth::BookDepthDataInsert;
+use trading_sys::models::book_depth::{
+    BookDepthDataInsert,
+    DepthLevels,
+    PartialBookDepthData,
+};
 use trading_sys::{create_book_depth, establish_connection_pg};
 
 use trading_sys::currency_pairs::CurrencyPair;
@@ -13,6 +17,7 @@ use actix_web::ws;
 
 pub struct BookDepthActor {
     pub client_writer: ws::ClientWriter,
+    pub depth_levels: Option<DepthLevels>,
 }
 
 impl Actor for BookDepthActor {
@@ -46,11 +51,22 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for BookDepthActor {
     fn handle(&mut self, msg: ws::Message, ctx: &mut Context<Self>) {
         match msg {
             ws::Message::Text(txt) => {
-                let book_depth_data: BookDepthDataInsert =
-                    serde_json::from_str::<BookDepthDataInsert>(&txt).unwrap();
-                println!("{:?}", &book_depth_data);
-                let connection = establish_connection_pg();
-                create_book_depth(&connection, book_depth_data);
+                match &self.depth_levels {
+                    None => {
+                        let book_depth_data: BookDepthDataInsert =
+                            serde_json::from_str(&txt).unwrap();
+
+                        println!("{:?}", &book_depth_data);
+                        let connection = establish_connection_pg();
+                        create_book_depth(&connection, book_depth_data);
+                    },
+                    Some(lvl) => {
+                        let partial_book: PartialBookDepthData =
+                            serde_json::from_str::<PartialBookDepthData>(&txt).unwrap();
+                        println!("Partial Book Depth Streams.\nDepth Lvl:{}\n{:#}", lvl, partial_book);
+                    },
+                }
+
             },
             ws::Message::Ping(ping) => self.client_writer.pong(&ping),
             ws::Message::Pong(pong) => self.client_writer.ping(&pong),
