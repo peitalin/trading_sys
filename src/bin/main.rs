@@ -1,4 +1,4 @@
-#![allow(unused_variables)]
+
 extern crate chrono;
 extern crate clap;
 
@@ -18,7 +18,7 @@ extern crate redis;
 
 extern crate trading_sys;
 
-use ring::{digest, hmac};
+use ring::{digest, hmac, rand};
 use std::fmt;
 
 fn main() -> std::io::Result<()> {

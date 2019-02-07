@@ -1,4 +1,4 @@
-#![allow(unused_variables)]
+#![allow(unused_imports)]
 extern crate chrono;
 extern crate clap;
 extern crate regex;
@@ -38,10 +38,11 @@ pub mod models;
 pub mod schema;
 pub mod serde_parsers;
 
-use crate::models::aggregate_trades::{AggregateTradeData};
-use crate::models::book_depth::{BookDepthData, BookDepthDataQuery};
-use crate::models::trades::{TradeData};
-use crate::models::kline::KlineData;
+use crate::models::aggregate_trades::AggregateTradeData;
+use crate::models::book_depth::{BookDepthDataInsert, BookDepthData};
+use crate::models::trades::TradeData;
+use crate::models::klines::KlineDataInsert;
+use crate::models::mini_ticker::MiniTickerDataInsert;
 
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
@@ -82,11 +83,9 @@ pub fn create_aggregate_trade<'a>(conn: &PgConnection, aggregate_trade_data: &Ag
     println!("Database write result: {:?}\n", res);
 }
 
-pub fn create_book_depth<'a>(conn: &PgConnection, book_depth_data: BookDepthData) {
-    use crate::models::book_depth::BookDepthData;
+pub fn create_book_depth<'a>(conn: &PgConnection, book_depth_data: BookDepthDataInsert) {
     use crate::schema::book_depth; // DB table name
     use diesel::prelude::*; // .get_result trait
-    use uuid::Uuid;
 
     let res = diesel::insert_into(book_depth::table)
         .values(book_depth_data)
@@ -95,13 +94,23 @@ pub fn create_book_depth<'a>(conn: &PgConnection, book_depth_data: BookDepthData
     println!("Database write result: {:?}\n", res);
 }
 
-pub fn create_kline<'a>(conn: &PgConnection, kline_data: KlineData) {
-    use crate::models::kline::KlineData;
+pub fn create_kline<'a>(conn: &PgConnection, kline_data: KlineDataInsert) {
     use crate::schema::klines; // DB table name
     use diesel::prelude::*;
 
     let res = diesel::insert_into(klines::table)
         .values(kline_data)
+        .execute(conn);
+
+    println!("Database write result: {:?}\n", res);
+}
+
+pub fn create_mini_tickers<'a>(conn: &PgConnection, mini_ticker_data: MiniTickerDataInsert) {
+    use crate::schema::mini_tickers; // DB table name
+    use diesel::prelude::*;
+
+    let res = diesel::insert_into(mini_tickers::table)
+        .values(mini_ticker_data)
         .execute(conn);
 
     println!("Database write result: {:?}\n", res);

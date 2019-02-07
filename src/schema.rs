@@ -29,6 +29,8 @@ table! {
 table! {
     klines (id) {
         id -> Int4,
+        event -> Text,
+        event_time -> Timestamp,
         start_time -> Timestamp,
         close_time -> Timestamp,
         symbol -> Text,
@@ -45,6 +47,21 @@ table! {
         quote_asset_vol -> Float4,
         taker_buy_base_vol -> Float4,
         taker_buy_quote_vol -> Float4,
+    }
+}
+
+table! {
+    mini_tickers (id) {
+        id -> Int4,
+        event -> Text,
+        event_time -> Timestamp,
+        symbol -> Text,
+        open -> Float4,
+        close -> Float4,
+        high -> Float4,
+        low -> Float4,
+        base_asset_vol -> Float4,
+        quote_asset_vol -> Float4,
     }
 }
 
@@ -75,6 +92,7 @@ allow_tables_to_appear_in_same_query!(
     aggregate_trades,
     book_depth,
     klines,
+    mini_tickers,
     posts,
     trades,
 );

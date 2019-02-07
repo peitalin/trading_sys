@@ -18,8 +18,9 @@ pub struct KlineMetaData {
     #[serde(rename = "s")]
     pub symbol: CurrencyPair, // Symbol
     #[serde(rename = "k")]
-    pub kline_data: KlineData, //  KlineData
+    pub kline_data: NewKlineData, //  without id
 }
+
 
 impl fmt::Display for KlineMetaData {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -28,11 +29,9 @@ impl fmt::Display for KlineMetaData {
 }
 
 
-
-
 #[derive(Debug, Serialize, Deserialize, Insertable)]
 #[table_name = "klines"]
-pub struct KlineData {
+pub struct NewKlineData {
     #[serde(rename = "t")]
     #[serde(deserialize_with = "deserialize_as_naive_date_time")]
     pub start_time: NaiveDateTime, // Kline start time
@@ -77,31 +76,97 @@ pub struct KlineData {
     pub taker_buy_quote_vol: f32, // Taker buy quote asset volume
 }
 
-impl fmt::Display for KlineData {
+impl fmt::Display for NewKlineData {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let pretty_json = serde_json::to_string_pretty(&self).unwrap();
         write!(f, "{:#}", pretty_json)
     }
 }
 
-
-#[derive(Queryable)]
-pub struct KlineDataQuery {
-    id: i32,
-    start_time: NaiveDateTime,
-    close_time: NaiveDateTime,
-    symbol: CurrencyPair,
-    interval: String,
-    first_trade_id: i32,
-    last_trade_id: i32,
-    open: f32,
-    close: f32,
-    high: f32,
-    low: f32,
-    volume: f32,
-    num_of_trades: i32,
-    is_kline_closed: bool,
-    quote_asset_vol: f32,
-    taker_buy_base_vol: f32,
-    taker_buy_quote_vol: f32,
+#[derive(Debug, Serialize, Deserialize, Queryable, Insertable)]
+#[table_name = "klines"]
+pub struct KlineDataInsert {
+    pub event: String,
+    pub event_time: NaiveDateTime,
+    pub start_time: NaiveDateTime,
+    pub close_time: NaiveDateTime,
+    pub symbol: CurrencyPair,
+    pub interval: String,
+    pub first_trade_id: i32,
+    pub last_trade_id: i32,
+    pub open: f32,
+    pub close: f32,
+    pub high: f32,
+    pub low: f32,
+    pub volume: f32,
+    pub num_of_trades: i32,
+    pub is_kline_closed: bool,
+    pub quote_asset_vol: f32,
+    pub taker_buy_base_vol: f32,
+    pub taker_buy_quote_vol: f32,
 }
+
+#[derive(Debug, Serialize, Deserialize, Queryable, Insertable)]
+#[table_name = "klines"]
+pub struct KlineData {
+    pub id: i32,
+    pub event: String,
+    pub event_time: NaiveDateTime,
+    pub start_time: NaiveDateTime,
+    pub close_time: NaiveDateTime,
+    pub symbol: CurrencyPair,
+    pub interval: String,
+    pub first_trade_id: i32,
+    pub last_trade_id: i32,
+    pub open: f32,
+    pub close: f32,
+    pub high: f32,
+    pub low: f32,
+    pub volume: f32,
+    pub num_of_trades: i32,
+    pub is_kline_closed: bool,
+    pub quote_asset_vol: f32,
+    pub taker_buy_base_vol: f32,
+    pub taker_buy_quote_vol: f32,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub enum KlineInterval {
+    _1m,
+    _3m,
+    _5m,
+    _15m,
+    _30m,
+    _1h,
+    _2h,
+    _4h,
+    _6h,
+    _8h,
+    _12h,
+    _1d,
+    _3d,
+    _1w,
+    _1M,
+}
+impl std::fmt::Display for KlineInterval {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            KlineInterval::_1m => write!(f, "1m"),
+            KlineInterval::_3m => write!(f, "3m"),
+            KlineInterval::_5m => write!(f, "5m"),
+            KlineInterval::_15m => write!(f, "15m"),
+            KlineInterval::_30m => write!(f, "30m"),
+            KlineInterval::_1h => write!(f, "1h"),
+            KlineInterval::_2h => write!(f, "2h"),
+            KlineInterval::_4h => write!(f, "4h"),
+            KlineInterval::_6h => write!(f, "6h"),
+            KlineInterval::_8h => write!(f, "8h"),
+            KlineInterval::_12h => write!(f, "12h"),
+            KlineInterval::_1d => write!(f, "1d"),
+            KlineInterval::_3d => write!(f, "3d"),
+            KlineInterval::_1w => write!(f, "1w"),
+            KlineInterval::_1M => write!(f, "1M"),
+        }
+    }
+}
+

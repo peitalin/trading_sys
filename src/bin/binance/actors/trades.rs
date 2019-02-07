@@ -19,7 +19,6 @@ impl Actor for TradeActor {
     }
 
     fn stopped(&mut self, _: &mut Context<Self>) {
-        println!("Disconnected");
         // Stop application on disconnect
         System::current().stop();
     }
@@ -32,13 +31,6 @@ impl TradeActor {
             act.hb(ctx);
             // client should check for a timeout here, similar to server code
         });
-    }
-
-    fn handle_ping(&mut self, ctx: &mut Context<Self>, ping: String) {
-        println!("{:?}", ws::Message::Ping(ping));
-        self.client_writer.pong("Pong from TradeActor");
-        // self.hb(ctx)
-        // client should check for a timeout here, similar to server code
     }
 }
 
@@ -60,14 +52,12 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for TradeActor {
         match msg {
             ws::Message::Text(txt) => {
                 let trade_data: TradeData = serde_json::from_str::<TradeData>(&txt).unwrap();
-
                 let connection = establish_connection_pg();
                 create_trade(&connection, &trade_data);
                 println!("{:?}", trade_data);
-            }
-            ws::Message::Ping(ping) => {
-                ctx.run_later(Duration::new(0, 0), |act, ctx| act.handle_ping(ctx, ping));
-            }
+            },
+            ws::Message::Ping(ping) => self.client_writer.pong(&ping),
+            ws::Message::Pong(pong) => self.client_writer.ping(&pong),
             _ => (),
         }
     }

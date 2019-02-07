@@ -2,7 +2,7 @@ use chrono::NaiveDateTime;
 use std::fmt;
 use std::time::Duration;
 
-use trading_sys::models::book_depth::BookDepthData;
+use trading_sys::models::book_depth::BookDepthDataInsert;
 use trading_sys::{create_book_depth, establish_connection_pg};
 
 use trading_sys::currency_pairs::CurrencyPair;
@@ -39,33 +39,6 @@ impl BookDepthActor {
             // server code
         });
     }
-
-    fn handle_ping(&mut self, ctx: &mut Context<Self>, ping: String) {
-        println!("{:?}", ws::Message::Ping(ping));
-        self.client_writer.pong("Pong from BookDepthActor");
-        // self.hb(ctx)
-        // client should check for a timeout here, similar to server code
-    }
-}
-// fn handle_ping<A: Actor>(act: &mut BookDepthActor, ctx: &mut Context<BookDepthActor>, ping: String)
-//     where A: Actor + 'static
-// {
-//     println!("{:?}", ws::Message::Ping(ping));
-//     act.client_writer.pong("Pong from BookDepthActor");
-//     act.hb(ctx)
-//     // client should check for a timeout here, similar to server code
-// }
-
-#[derive(Message)]
-pub struct ClientCommand(pub String);
-
-/// Handle stdin commands
-impl Handler<ClientCommand> for BookDepthActor {
-    type Result = ();
-
-    fn handle(&mut self, command: ClientCommand, ctx: &mut Context<Self>) {
-        self.client_writer.text(command.0)
-    }
 }
 
 /// Handle Websocket messages
@@ -73,15 +46,14 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for BookDepthActor {
     fn handle(&mut self, msg: ws::Message, ctx: &mut Context<Self>) {
         match msg {
             ws::Message::Text(txt) => {
-                let book_depth_data: BookDepthData =
-                    serde_json::from_str::<BookDepthData>(&txt).unwrap();
+                let book_depth_data: BookDepthDataInsert =
+                    serde_json::from_str::<BookDepthDataInsert>(&txt).unwrap();
                 println!("{:?}", &book_depth_data);
                 let connection = establish_connection_pg();
                 create_book_depth(&connection, book_depth_data);
-            }
-            ws::Message::Ping(ping) => {
-                ctx.run_later(Duration::new(0, 0), |act, ctx| act.handle_ping(ctx, ping));
-            }
+            },
+            ws::Message::Ping(ping) => self.client_writer.pong(&ping),
+            ws::Message::Pong(pong) => self.client_writer.ping(&pong),
             _ => (),
         }
     }

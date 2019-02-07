@@ -9,7 +9,7 @@ use crate::schema::book_depth;
 
 
 #[derive(Queryable)]
-pub struct BookDepthDataQuery {
+pub struct BookDepthData {
     pub id: i32,
     pub event: String,             // Event type
     pub event_time: NaiveDateTime, // Event time
@@ -23,7 +23,7 @@ pub struct BookDepthDataQuery {
 ///////////////////////////////////////////////////////////////////////////////
 #[derive(Debug, Serialize, Deserialize, Queryable, Insertable)]
 #[table_name = "book_depth"]
-pub struct BookDepthData {
+pub struct BookDepthDataInsert {
     #[serde(rename = "e")]
     pub event: String, // Event type
     #[serde(rename = "E")]
@@ -41,7 +41,7 @@ pub struct BookDepthData {
     pub asks: Vec<Quote>, // Asks to be updated
 }
 
-impl fmt::Display for BookDepthData {
+impl fmt::Display for BookDepthDataInsert {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let pretty_json = serde_json::to_string_pretty(&self).unwrap();
         write!(f, "{}", pretty_json)
@@ -167,9 +167,7 @@ impl ToSql<Jsonb, Pg> for Quote {
 impl FromSql<Jsonb, Pg> for Quote {
     fn from_sql(maybe_bytes: Option<&[u8]>) -> diesel::deserialize::Result<Self> {
         let value = <serde_json::Value as FromSql<Jsonb, Pg>>::from_sql(maybe_bytes)?;
-        println!("---> {:?}", value);
         let jsond: Quote = serde_json::from_value(value)?;
-        println!("---> {:?}", jsond);
         Ok(jsond)
     }
 }

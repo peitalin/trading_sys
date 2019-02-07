@@ -8,10 +8,16 @@ use crate::serde_parsers::{deserialize_as_f32, deserialize_as_naive_date_time};
 
 use crate::schema::posts;
 
+#[allow(unused_variables)]
 pub mod trades;
+#[allow(unused_variables)]
 pub mod aggregate_trades;
+#[allow(unused_variables)]
 pub mod book_depth;
-pub mod kline;
+#[allow(unused_variables)]
+pub mod klines;
+#[allow(unused_variables)]
+pub mod mini_ticker;
 
 
 #[derive(Queryable)]
@@ -27,6 +33,7 @@ pub struct NewPost<'a> {
     pub title: &'a str,
     pub body: &'a str,
 }
+
 
 
 
