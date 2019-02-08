@@ -92,9 +92,7 @@ where
     deserializer.deserialize_any(F32Visitor)
 }
 
-pub fn deserialize_as_naive_date_time<'de, D>(
-    deserializer: D,
-) -> Result<chrono::NaiveDateTime, D::Error>
+pub fn deserialize_as_naive_date_time<'de, D>(deserializer: D) -> Result<chrono::NaiveDateTime, D::Error>
 where
     D: de::Deserializer<'de>,
 {
@@ -173,3 +171,66 @@ where
 // let naive = chrono::NaiveDateTime::from_timestamp(d/1000, 0);
 // // Create a normal DateTime from the NaiveDateTime
 // let datetime = chrono::DateTime::from_utc(naive, chrono::Utc);
+
+
+
+#[cfg(test)]
+mod tests {
+
+    use crate::serde_parsers::deserialize_as_naive_date_time;
+    #[derive(Deserialize)]
+    struct Mock_Json_Timestamp {
+        #[serde(deserialize_with = "deserialize_as_naive_date_time")]
+        json_time: chrono::NaiveDateTime,
+    }
+
+    fn create_benchmark() -> chrono::NaiveDateTime {
+        let sec: i64 = 1_222_333_444_555;
+        let ms = (sec % 1000) * 1_000_000;
+        let t_benchmark: chrono::NaiveDateTime = chrono::NaiveDateTime::from_timestamp(
+            sec as i64 / 1_000 as i64,
+            ms as u32,
+        );
+        t_benchmark
+    }
+
+    #[test]
+    fn test_naive_date_time_str() {
+        let _t1 = r#"{ "json_time": "1222333444555" }"#;
+        let t1: Mock_Json_Timestamp =
+            serde_json::from_str::<Mock_Json_Timestamp>(&_t1).unwrap();
+        let t_benchmark = create_benchmark();
+        assert_eq!(t1.json_time, t_benchmark)
+    }
+
+    #[test]
+    fn test_naive_date_time_int() {
+        let _t1 = r#"{ "json_time": 1222333444555 }"#;
+        let t1: Mock_Json_Timestamp =
+            serde_json::from_str::<Mock_Json_Timestamp>(&_t1).unwrap();
+        let t_benchmark = create_benchmark();
+        assert_eq!(t1.json_time, t_benchmark)
+    }
+
+    #[test]
+    fn test_naive_date_time_float() {
+        let _t1 = r#"{ "json_time": 1222333444555.0 }"#;
+        let t1: Mock_Json_Timestamp =
+            serde_json::from_str::<Mock_Json_Timestamp>(&_t1).unwrap();
+        let t_benchmark = create_benchmark();
+        assert_eq!(t1.json_time, t_benchmark)
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+

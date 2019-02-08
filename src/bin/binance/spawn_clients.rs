@@ -5,6 +5,7 @@ use futures::Future;
 use trading_sys::currency_pairs::{CurrencyBase, CurrencyPair, CurrencyPrice};
 use trading_sys::models::klines::KlineInterval;
 use trading_sys::models::book_depth::DepthLevels;
+use trading_sys::models::mini_ticker::MiniTickerQueryType;
 
 use crate::actors::book_depth::BookDepthActor;
 use crate::actors::aggregate_trade::AggregateTradeActor;
@@ -126,8 +127,12 @@ pub fn spawn_kline_client(currency_pair: CurrencyPair, interval: KlineInterval) 
     );
 }
 
-pub fn spawn_mini_ticker_client(currency_pair: CurrencyPair) {
-    let ws_url = binance_api_url(format!("{}@miniTicker", currency_pair));
+pub fn spawn_mini_ticker_client(currency_pair: CurrencyPair, all_markets: Option<MiniTickerQueryType>) {
+
+    let ws_url = match &all_markets {
+        Some(MiniTickerQueryType) => binance_api_url("!miniTicker@arr".to_string()),
+        _ => binance_api_url(format!("{}@miniTicker", currency_pair)),
+    };
     println!("Endpoint: {}", ws_url);
 
     actix::Arbiter::spawn(
@@ -141,8 +146,13 @@ pub fn spawn_mini_ticker_client(currency_pair: CurrencyPair) {
                     MiniTickerActor::add_stream(reader, ctx);
                     MiniTickerActor {
                         client_writer: writer,
+                        all_markets: all_markets,
                     }
                 });
             })
     );
 }
+
+
+
+

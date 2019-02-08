@@ -1,4 +1,5 @@
 use trading_sys::models::mini_ticker::MiniTickerDataInsert;
+use trading_sys::models::mini_ticker::MiniTickerQueryType;
 use trading_sys::{create_mini_tickers, establish_connection_pg};
 
 use std::time::Duration;
@@ -7,7 +8,8 @@ use actix::*;
 use actix_web::ws;
 
 pub struct MiniTickerActor {
-    pub client_writer: ws::ClientWriter
+    pub client_writer: ws::ClientWriter,
+    pub all_markets: Option<MiniTickerQueryType>,
 }
 
 impl Actor for MiniTickerActor {
@@ -38,10 +40,23 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for MiniTickerActor {
     fn handle(&mut self, msg: ws::Message, ctx: &mut Context<Self>) {
         match msg {
             ws::Message::Text(txt) => {
-                let mini_ticker_data: MiniTickerDataInsert = serde_json::from_str::<MiniTickerDataInsert>(&txt).unwrap();
-                println!("{:?}", &mini_ticker_data);
-                let connection = establish_connection_pg();
-                create_mini_tickers(&connection, mini_ticker_data);
+                match self.all_markets {
+                    Some(MiniTickerQueryType::AllMarkets) => {
+                        let mini_ticker_data: Vec<MiniTickerDataInsert> =
+                            serde_json::from_str(&txt).unwrap();
+
+                        for ticker in mini_ticker_data.iter() {
+                            println!("{:?}", ticker);
+                        }
+                    },
+                    _ => {
+                        let mini_ticker_data: MiniTickerDataInsert =
+                            serde_json::from_str::<MiniTickerDataInsert>(&txt).unwrap();
+                        println!("{:?}", &mini_ticker_data);
+                        let connection = establish_connection_pg();
+                        create_mini_tickers(&connection, mini_ticker_data);
+                    },
+                };
             },
             ws::Message::Ping(ping) => self.client_writer.pong(&ping),
             ws::Message::Pong(pong) => self.client_writer.ping(&pong),
@@ -62,3 +77,5 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for MiniTickerActor {
         ctx.stop()
     }
 }
+
+

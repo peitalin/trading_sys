@@ -117,3 +117,52 @@ pub fn create_mini_tickers<'a>(conn: &PgConnection, mini_ticker_data: MiniTicker
 }
 
 
+
+
+#[cfg(test)]
+mod tests {
+
+    #[test]
+    fn test_deserialization_mini_ticker() {
+        use crate::models::mini_ticker::TEST_MINI_TICKER_DATA;
+        use crate::models::mini_ticker::MiniTickerDataInsert;
+
+        let jsond_test = serde_json::from_str::<MiniTickerDataInsert>(TEST_MINI_TICKER_DATA).unwrap();
+        println!("test deserialization <mini_ticker>:\n{:?}", jsond_test);
+        let mock_data = MiniTickerDataInsert {
+            event: "24hrMiniTicker".to_owned(),
+            event_time: chrono::NaiveDateTime::from_timestamp(1_222_333_444_555, 0),
+            symbol: crate::currency_pairs::CurrencyPair::BNBBTC,
+            close: 0.0025,
+            open: 0.0010,
+            high: 0.0025,
+            low: 0.0010,
+            base_asset_vol: 10000.0,
+            quote_asset_vol: 18.0
+        };
+        println!("test deserialization <mini_ticker>:\n{:?}", jsond_test);
+        assert_eq!(1,1)
+    }
+
+    // #[test]
+    // fn test_actor() {
+    //     use diesel::result::Error;
+    //
+    //     use crate::schema::mini_tickers; // DB table name
+    //
+    //     let conn = establish_connection_pg();
+    //     conn.test_transaction::<_, Error, _>(|| {
+    //         diesel::insert_into(mini_ticker_data)
+    //             .values()
+    //             .execute(&conn)?;
+    //     })
+    // }
+}
+
+
+
+
+
+
+
+

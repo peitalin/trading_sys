@@ -57,3 +57,25 @@ pub struct MiniTickerData {
     pub base_asset_vol: f32,  // Total traded base asset volume
     pub quote_asset_vol: f32  // Total traded quote asset volume
 }
+
+#[derive(Debug, Clone)]
+pub enum MiniTickerQueryType {
+    AllMarkets,
+    SingleMarket,
+}
+
+pub static TEST_MINI_TICKER_DATA: &str = r#"
+{
+    "e": "24hrMiniTicker",
+    "E": 1222333444555,
+    "s": "BNBBTC",
+    "c": "0.0025",
+    "o": "0.0010",
+    "h": "0.0025",
+    "l": "0.0010",
+    "v": "10000",
+    "q": "18"
+}
+"#;
+
+

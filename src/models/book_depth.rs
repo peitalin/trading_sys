@@ -196,9 +196,9 @@ pub enum DepthLevels {
 impl fmt::Display for DepthLevels {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            _5 => write!(f, "5"),
-            _10 => write!(f, "10"),
-            _20 => write!(f, "20"),
+            DepthLevels::_5 => write!(f, "5"),
+            DepthLevels::_10 => write!(f, "10"),
+            DepthLevels::_20 => write!(f, "20"),
         }
     }
 }
