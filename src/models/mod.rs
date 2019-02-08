@@ -4,7 +4,7 @@ use serde::de::{Deserialize, Deserializer};
 use std::fmt;
 
 use crate::currency_pairs::CurrencyPair;
-use crate::serde_parsers::{deserialize_as_f32, deserialize_as_naive_date_time};
+use crate::serde_parsers::{deserialize_as_f32};
 
 use crate::schema::posts;
 

@@ -9,9 +9,6 @@ use trading_sys::models::book_depth::{
 };
 use trading_sys::{create_book_depth, establish_connection_pg};
 
-use trading_sys::currency_pairs::CurrencyPair;
-use trading_sys::serde_parsers::deserialize_as_naive_date_time;
-
 use actix::*;
 use actix_web::ws;
 

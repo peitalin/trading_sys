@@ -4,7 +4,7 @@ use serde::de;
 use serde::de::{Deserialize, Deserializer};
 
 use crate::currency_pairs::CurrencyPair;
-use crate::serde_parsers::{deserialize_as_f32, deserialize_as_naive_date_time};
+use crate::serde_parsers::{deserialize_as_f32, deserialize_as_naive_date_time_ms};
 use crate::schema::aggregate_trades;
 
 
@@ -17,7 +17,7 @@ pub struct AggregateTradeData {
     #[serde(rename = "e")]
     pub event: String, // Event type
     #[serde(rename = "E")]
-    #[serde(deserialize_with = "deserialize_as_naive_date_time")]
+    #[serde(deserialize_with = "deserialize_as_naive_date_time_ms")]
     pub event_time: NaiveDateTime, // Event time
     #[serde(rename = "s")]
     pub symbol: String, // Symbol
@@ -32,7 +32,7 @@ pub struct AggregateTradeData {
     #[serde(rename = "l")]
     pub last_trade_id: i32, // Final update ID in event
     #[serde(rename = "T")]
-    #[serde(deserialize_with = "deserialize_as_naive_date_time")]
+    #[serde(deserialize_with = "deserialize_as_naive_date_time_ms")]
     pub trade_time: NaiveDateTime, // Final update ID in event
     #[serde(rename = "m")]
     pub buyer_mkt_maker: bool, //  is buyer the market maker?

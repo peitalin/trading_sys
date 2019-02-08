@@ -4,17 +4,17 @@ use serde::de;
 use serde::de::{Deserialize, Deserializer};
 
 use crate::currency_pairs::CurrencyPair;
-use crate::serde_parsers::{deserialize_as_f32, deserialize_as_naive_date_time};
+use crate::serde_parsers::{deserialize_as_f32, deserialize_as_naive_date_time_ms};
 use crate::schema::mini_tickers;
 
 
-#[derive(Debug, Serialize, Deserialize, Insertable)]
+#[derive(Debug, Serialize, Deserialize, Insertable, PartialEq)]
 #[table_name = "mini_tickers"]
 pub struct MiniTickerDataInsert {
     #[serde(rename = "e")]
     pub event: String,       // Event type
     #[serde(rename = "E")]
-    #[serde(deserialize_with = "deserialize_as_naive_date_time")]
+    #[serde(deserialize_with = "deserialize_as_naive_date_time_ms")]
     pub event_time: NaiveDateTime,     // Event time
     #[serde(rename = "s")]
     pub symbol: CurrencyPair,  // Symbol
@@ -77,5 +77,35 @@ pub static TEST_MINI_TICKER_DATA: &str = r#"
     "q": "18"
 }
 "#;
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_deserialization_mini_ticker() {
+        use crate::models::mini_ticker::TEST_MINI_TICKER_DATA;
+        use crate::models::mini_ticker::MiniTickerDataInsert;
+        use crate::serde_parsers::create_timestamp_benchmark;
+
+        let jsond_test = serde_json::from_str::<MiniTickerDataInsert>(TEST_MINI_TICKER_DATA).unwrap();
+        let mock_data = MiniTickerDataInsert {
+            event: "24hrMiniTicker".to_owned(),
+            event_time: create_timestamp_benchmark(1_222_333_444_555),
+            symbol: crate::currency_pairs::CurrencyPair::BNBBTC,
+            close: 0.0025,
+            open: 0.0010,
+            high: 0.0025,
+            low: 0.0010,
+            base_asset_vol: 10000.0,
+            quote_asset_vol: 18.0
+        };
+        assert_eq!(jsond_test, mock_data)
+    }
+}
+
+
+
+
+
+
 
 

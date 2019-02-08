@@ -3,7 +3,7 @@ use std::fmt;
 use std::time::Duration;
 
 use trading_sys::currency_pairs::CurrencyPair;
-use trading_sys::serde_parsers::{deserialize_as_f64, deserialize_as_naive_date_time};
+use trading_sys::serde_parsers::{deserialize_as_f64};
 use trading_sys::models::klines::{ KlineMetaData, KlineInterval, KlineDataInsert };
 
 use actix::*;
@@ -44,30 +44,30 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for KlineActor {
             ws::Message::Text(txt) => {
                 let kline_meta_data: KlineMetaData =
                     serde_json::from_str::<KlineMetaData>(&txt).unwrap();
-                let kline_raw_data = kline_meta_data.kline_data;
+                let nkd = kline_meta_data.kline_data;
                 let connection = trading_sys::establish_connection_pg();
-                let new_kline_data = KlineDataInsert {
+                let kline_data_insert = KlineDataInsert {
                     event:          kline_meta_data.event,
                     event_time:     kline_meta_data.event_time,
-                    start_time:     kline_raw_data.start_time,
-                    close_time:     kline_raw_data.close_time,
-                    symbol:         kline_raw_data.symbol,
-                    interval:       kline_raw_data.interval,
-                    first_trade_id: kline_raw_data.first_trade_id,
-                    last_trade_id:  kline_raw_data.last_trade_id,
-                    open:           kline_raw_data.open,
-                    close:          kline_raw_data.close,
-                    high:           kline_raw_data.high,
-                    low:            kline_raw_data.low,
-                    volume:         kline_raw_data.volume,
-                    num_of_trades:  kline_raw_data.num_of_trades,
-                    is_kline_closed:     kline_raw_data.is_kline_closed,
-                    quote_asset_vol:     kline_raw_data.quote_asset_vol,
-                    taker_buy_base_vol:  kline_raw_data.taker_buy_base_vol,
-                    taker_buy_quote_vol: kline_raw_data.taker_buy_quote_vol,
+                    start_time:     nkd.start_time,
+                    close_time:     nkd.close_time,
+                    symbol:         nkd.symbol,
+                    interval:       nkd.interval,
+                    first_trade_id: nkd.first_trade_id,
+                    last_trade_id:  nkd.last_trade_id,
+                    open:           nkd.open,
+                    close:          nkd.close,
+                    high:           nkd.high,
+                    low:            nkd.low,
+                    volume:         nkd.volume,
+                    num_of_trades:  nkd.num_of_trades,
+                    is_kline_closed:     nkd.is_kline_closed,
+                    quote_asset_vol:     nkd.quote_asset_vol,
+                    taker_buy_base_vol:  nkd.taker_buy_base_vol,
+                    taker_buy_quote_vol: nkd.taker_buy_quote_vol,
                 };
-                println!("{:?}\n", &new_kline_data);
-                trading_sys::create_kline(&connection, new_kline_data);
+                println!("{:?}\n", &kline_data_insert);
+                trading_sys::create_kline(&connection, kline_data_insert);
 
             },
             ws::Message::Ping(ping) => self.client_writer.pong(&ping),

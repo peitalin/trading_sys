@@ -49,7 +49,7 @@ impl CurrencyPair {
         // regex matches pairs with 'CurrencyBase' as base pair.
         let base_re = regex::Regex::new(&format!(r#"{}$"#, base_pair)).unwrap();
         match base_re.find(&self.as_string()) {
-            Some(s) => true,
+            Some(_s) => true,
             None => false,
         }
     }

@@ -92,7 +92,7 @@ where
     deserializer.deserialize_any(F32Visitor)
 }
 
-pub fn deserialize_as_naive_date_time<'de, D>(deserializer: D) -> Result<chrono::NaiveDateTime, D::Error>
+pub fn deserialize_as_naive_date_time_ms<'de, D>(deserializer: D) -> Result<chrono::NaiveDateTime, D::Error>
 where
     D: de::Deserializer<'de>,
 {
@@ -107,91 +107,86 @@ where
         }
 
         fn visit_i64<E>(self, timestamp: i64) -> Result<Self::Value, E>
-        where
-            E: de::Error,
+        where E: de::Error,
         {
             // convert to NaiveDateTime
-            assert!(timestamp > 1_000_000_000); // Binance timestamps are in milliseconds
-                                                // check that you're not getting timestamps in seconds format.
-                                                // otheriwse you'll overstate milliseconds
-            let millisecs = (timestamp % 1000) * 1_000_000;
-            // Multiply by 1_000_000 to get Nanoseconds for `from_timestamp(...)`
-            // from_timestamp(secs: i64, nsecs: u32) -> NaiveDateTime
-            Ok(chrono::NaiveDateTime::from_timestamp(
-                timestamp / 1_000,
-                millisecs as u32,
-            ))
+            Ok(create_timestamp_ms(timestamp))
         }
 
         fn visit_u64<E>(self, timestamp: u64) -> Result<Self::Value, E>
-        where
-            E: de::Error,
-        {
+        where E: de::Error, {
             // convert to NaiveDateTime
-            assert!(timestamp > 1_000_000_000); // Binance timestamps are in milliseconds
-            let millisecs = (timestamp % 1000) * 1_000_000;
-            Ok(chrono::NaiveDateTime::from_timestamp(
-                timestamp as i64 / 1_000,
-                millisecs as u32,
-            ))
+            Ok(create_timestamp_ms(timestamp))
         }
 
         fn visit_f64<E>(self, timestamp: f64) -> Result<Self::Value, E>
-        where
-            E: de::Error,
+        where E: de::Error,
         {
             // convert to NaiveDateTime
-            assert!(timestamp > 1_000_000_000.0); // Binance timestamps are in milliseconds
-            let millisecs = ((timestamp as i64) % 1000) * 1_000_000;
-            Ok(chrono::NaiveDateTime::from_timestamp(
-                timestamp as i64 / 1_000,
-                millisecs as u32,
-            ))
+            Ok(create_timestamp_ms(timestamp))
         }
 
         fn visit_str<E>(self, s: &str) -> Result<Self::Value, E>
-        where
-            E: de::Error,
+        where E: de::Error,
         {
             // convert to NaiveDateTime
             let timestamp: i64 = s.parse::<i64>().unwrap();
-            assert!(timestamp > 1_000_000_000); // Binance timestamps are in milliseconds
-            let millisecs = (timestamp % 1000) * 1_000_000;
-            Ok(chrono::NaiveDateTime::from_timestamp(
-                timestamp as i64 / 1_000,
-                millisecs as u32,
-            ))
+            Ok(create_timestamp_ms(timestamp))
         }
     }
     // use our visitor to deserialize
     deserializer.deserialize_any(NaiveDateTimeVisitor)
 }
 
-// let d: i64 = Deserialize::deserialize(input)?;
-// let naive = chrono::NaiveDateTime::from_timestamp(d/1000, 0);
-// // Create a normal DateTime from the NaiveDateTime
-// let datetime = chrono::DateTime::from_utc(naive, chrono::Utc);
 
+use std::ops::{ AddAssign, Div };
+use num::cast::{ToPrimitive, FromPrimitive};
+
+fn create_timestamp_ms<T>(_timestamp: T) -> chrono::NaiveDateTime
+where T: Div + ToPrimitive + AddAssign + Default,
+{
+    // convert to NaiveDateTime
+    let timestamp: i64 = _timestamp.to_i64().unwrap();
+    assert!(timestamp > 1_000_000_000);
+    // Timestamps should much much larger than 10 digits
+    match timestamp {
+        0 ... 1_000_000_000 => {
+            // Timestamp with less than 11 digits is in seconds
+            let ms = 0;
+            chrono::NaiveDateTime::from_timestamp(timestamp, ms as u32)
+        },
+        _ => {
+            // Timestamp with more than 12 digits is in milliseconds
+            let ms = (timestamp % 1000) * 1_000_000;
+            // get remainder in milliseconds, convert to nanoseconds
+            // as from_timestamp takes nanoseconds in the 2nd argument
+            chrono::NaiveDateTime::from_timestamp(timestamp / 1_000, ms as u32)
+            // first argument is seconds, second argument is in nanoseconds
+        }
+    }
+}
+
+
+pub fn create_timestamp_benchmark(sec: i64) -> chrono::NaiveDateTime {
+    let ms = (sec % 1000) * 1_000_000;
+    let t_benchmark = chrono::NaiveDateTime::from_timestamp(
+        sec as i64 / 1_000 as i64,
+        ms as u32,
+    );
+    t_benchmark
+}
 
 
 #[cfg(test)]
 mod tests {
 
-    use crate::serde_parsers::deserialize_as_naive_date_time;
+    use crate::serde_parsers::deserialize_as_naive_date_time_ms;
+    use crate::serde_parsers::create_timestamp_benchmark;
+
     #[derive(Deserialize)]
     struct Mock_Json_Timestamp {
-        #[serde(deserialize_with = "deserialize_as_naive_date_time")]
+        #[serde(deserialize_with = "deserialize_as_naive_date_time_ms")]
         json_time: chrono::NaiveDateTime,
-    }
-
-    fn create_benchmark() -> chrono::NaiveDateTime {
-        let sec: i64 = 1_222_333_444_555;
-        let ms = (sec % 1000) * 1_000_000;
-        let t_benchmark: chrono::NaiveDateTime = chrono::NaiveDateTime::from_timestamp(
-            sec as i64 / 1_000 as i64,
-            ms as u32,
-        );
-        t_benchmark
     }
 
     #[test]
@@ -199,7 +194,7 @@ mod tests {
         let _t1 = r#"{ "json_time": "1222333444555" }"#;
         let t1: Mock_Json_Timestamp =
             serde_json::from_str::<Mock_Json_Timestamp>(&_t1).unwrap();
-        let t_benchmark = create_benchmark();
+        let t_benchmark = create_timestamp_benchmark(1_222_333_444_555);
         assert_eq!(t1.json_time, t_benchmark)
     }
 
@@ -208,7 +203,7 @@ mod tests {
         let _t1 = r#"{ "json_time": 1222333444555 }"#;
         let t1: Mock_Json_Timestamp =
             serde_json::from_str::<Mock_Json_Timestamp>(&_t1).unwrap();
-        let t_benchmark = create_benchmark();
+        let t_benchmark = create_timestamp_benchmark(1_222_333_444_555);
         assert_eq!(t1.json_time, t_benchmark)
     }
 
@@ -217,7 +212,7 @@ mod tests {
         let _t1 = r#"{ "json_time": 1222333444555.0 }"#;
         let t1: Mock_Json_Timestamp =
             serde_json::from_str::<Mock_Json_Timestamp>(&_t1).unwrap();
-        let t_benchmark = create_benchmark();
+        let t_benchmark = create_timestamp_benchmark(1_222_333_444_555);
         assert_eq!(t1.json_time, t_benchmark)
     }
 
