@@ -41,7 +41,9 @@ pub mod serde_parsers;
 use crate::models::aggregate_trades::AggregateTradeData;
 use crate::models::book_depth::{BookDepthDataInsert, BookDepthData};
 use crate::models::trades::TradeData;
-use crate::models::klines::KlineDataInsert;
+use crate::models::klines::{
+    KlineDataInsert,
+};
 use crate::models::mini_ticker::MiniTickerDataInsert;
 
 use diesel::pg::PgConnection;
@@ -148,16 +150,20 @@ mod tests {
     #[test]
     fn test_klines_postgres_write() {
         use crate::schema::klines; // DB table name
-        // use crate::models::klines::TEST_KLINE_DATA;
-        use crate::models::klines::KlineDataInsert;
-        // let jsond = serde_json::from_str::<KlineDataInsert>(TEST_KLINE_DATA).unwrap();
+        use crate::models::klines::{
+            KlineDataInsert, NewKlineData, TEST_KLINE_DATA,
+            KlineMetaData, map_klinemeta_to_klineinsertdata
+        };
 
-        // let conn: PgConnection = establish_connection_pg();
-        // conn.test_transaction::<_, Error, _>(|| {
-        //     diesel::insert_into(klines::table)
-        //         .values(jsond)
-        //         .execute(&conn)
-        // });
+        let kmeta_mdata = serde_json::from_str::<KlineMetaData>(TEST_KLINE_DATA).unwrap();
+        let kline_data_insert = map_klinemeta_to_klineinsertdata(kmeta_mdata);
+
+        let conn: PgConnection = establish_connection_pg();
+        conn.test_transaction::<_, Error, _>(|| {
+            diesel::insert_into(klines::table)
+                .values(kline_data_insert)
+                .execute(&conn)
+        });
     }
 }
 

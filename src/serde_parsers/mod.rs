@@ -8,8 +8,7 @@ use std::fmt;
 ///////////////////////////////////////////////////////////////////////////
 
 pub fn deserialize_as_f64<'de, D>(deserializer: D) -> Result<f64, D::Error>
-where
-    D: de::Deserializer<'de>,
+where D: de::Deserializer<'de>,
 {
     // define a visitor that deserializes String to f64
     struct F64Visitor;
@@ -22,9 +21,7 @@ where
         }
 
         fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-        where
-            E: de::Error,
-        {
+        where E: de::Error, {
             // convert to f64
             Ok(serde_json::from_str(v).unwrap())
         }
@@ -34,8 +31,7 @@ where
 }
 
 pub fn deserialize_as_maybe_f64<'de, D>(deserializer: D) -> Result<Option<f64>, D::Error>
-where
-    D: de::Deserializer<'de>,
+where D: de::Deserializer<'de>,
 {
     // define a visitor that deserializes String to f64
     struct F64Visitor;
@@ -48,17 +44,13 @@ where
         }
 
         fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-        where
-            E: de::Error,
-        {
+        where E: de::Error, {
             // convert to f64
             Ok(Some(serde_json::from_str(v).unwrap()))
         }
 
         fn visit_unit<E>(self) -> Result<Self::Value, E>
-        where
-            E: de::Error,
-        {
+        where E: de::Error, {
             Ok(None) // convert to none
         }
     }
@@ -67,8 +59,7 @@ where
 }
 
 pub fn deserialize_as_f32<'de, D>(deserializer: D) -> Result<f32, D::Error>
-where
-    D: de::Deserializer<'de>,
+where D: de::Deserializer<'de>,
 {
     // define a visitor that deserializes String to f32
     struct F32Visitor;
@@ -81,8 +72,7 @@ where
         }
 
         fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-        where
-            E: de::Error,
+        where E: de::Error,
         {
             // convert to f32
             Ok(serde_json::from_str(v).unwrap())
@@ -93,8 +83,7 @@ where
 }
 
 pub fn deserialize_as_naive_date_time_ms<'de, D>(deserializer: D) -> Result<chrono::NaiveDateTime, D::Error>
-where
-    D: de::Deserializer<'de>,
+where D: de::Deserializer<'de>,
 {
     // define a visitor that deserializes String or i64 to NaiveDateTime
     struct NaiveDateTimeVisitor;
@@ -107,29 +96,22 @@ where
         }
 
         fn visit_i64<E>(self, timestamp: i64) -> Result<Self::Value, E>
-        where E: de::Error,
-        {
-            // convert to NaiveDateTime
+        where E: de::Error, {
             Ok(create_timestamp_ms(timestamp))
         }
 
         fn visit_u64<E>(self, timestamp: u64) -> Result<Self::Value, E>
         where E: de::Error, {
-            // convert to NaiveDateTime
             Ok(create_timestamp_ms(timestamp))
         }
 
         fn visit_f64<E>(self, timestamp: f64) -> Result<Self::Value, E>
-        where E: de::Error,
-        {
-            // convert to NaiveDateTime
+        where E: de::Error, {
             Ok(create_timestamp_ms(timestamp))
         }
 
         fn visit_str<E>(self, s: &str) -> Result<Self::Value, E>
-        where E: de::Error,
-        {
-            // convert to NaiveDateTime
+        where E: de::Error, {
             let timestamp: i64 = s.parse::<i64>().unwrap();
             Ok(create_timestamp_ms(timestamp))
         }

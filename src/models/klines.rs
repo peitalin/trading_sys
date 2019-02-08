@@ -171,6 +171,30 @@ impl std::fmt::Display for KlineInterval {
 }
 
 
+pub fn map_klinemeta_to_klineinsertdata(kline_meta_data: KlineMetaData) -> KlineDataInsert {
+    let kd = kline_meta_data.kline_data;
+    KlineDataInsert {
+        event:          kline_meta_data.event,
+        event_time:     kline_meta_data.event_time,
+        start_time:     kd.start_time,
+        close_time:     kd.close_time,
+        symbol:         kd.symbol,
+        interval:       kd.interval,
+        first_trade_id: kd.first_trade_id,
+        last_trade_id:  kd.last_trade_id,
+        open:           kd.open,
+        close:          kd.close,
+        high:           kd.high,
+        low:            kd.low,
+        volume:         kd.volume,
+        num_of_trades:  kd.num_of_trades,
+        is_kline_closed:     kd.is_kline_closed,
+        quote_asset_vol:     kd.quote_asset_vol,
+        taker_buy_base_vol:  kd.taker_buy_base_vol,
+        taker_buy_quote_vol: kd.taker_buy_quote_vol,
+    }
+}
+
 
 pub static TEST_KLINE_DATA: &str = r#"
 {
@@ -203,35 +227,15 @@ pub static TEST_KLINE_DATA: &str = r#"
 mod tests {
     #[test]
     fn test_deserialization_klines() {
-        use crate::models::klines::TEST_KLINE_DATA;
-        use crate::models::klines::KlineDataInsert;
-        use crate::models::klines::NewKlineData;
-        use crate::models::klines::KlineMetaData;
         use crate::serde_parsers::create_timestamp_benchmark;
+        use crate::models::klines::{
+            KlineDataInsert, NewKlineData, TEST_KLINE_DATA,
+            KlineMetaData, map_klinemeta_to_klineinsertdata
+        };
 
         let kline_meta_data =
                     serde_json::from_str::<KlineMetaData>(&TEST_KLINE_DATA).unwrap();
-        let kd = kline_meta_data.kline_data;
-        let kline_data_insert = KlineDataInsert {
-            event:          kline_meta_data.event,
-            event_time:     kline_meta_data.event_time,
-            start_time:     kd.start_time,
-            close_time:     kd.close_time,
-            symbol:         kd.symbol,
-            interval:       kd.interval,
-            first_trade_id: kd.first_trade_id,
-            last_trade_id:  kd.last_trade_id,
-            open:           kd.open,
-            close:          kd.close,
-            high:           kd.high,
-            low:            kd.low,
-            volume:         kd.volume,
-            num_of_trades:  kd.num_of_trades,
-            is_kline_closed:     kd.is_kline_closed,
-            quote_asset_vol:     kd.quote_asset_vol,
-            taker_buy_base_vol:  kd.taker_buy_base_vol,
-            taker_buy_quote_vol: kd.taker_buy_quote_vol,
-        };
+        let kline_data_insert = map_klinemeta_to_klineinsertdata(kline_meta_data);
 
         let mock_data = KlineDataInsert {
             event: "kline".to_owned(),
@@ -242,10 +246,10 @@ mod tests {
             interval:   "1m".to_owned(),
             first_trade_id: 100,
             last_trade_id:  200,
-            open: 0.0010,
+            open:  0.0010,
             close: 0.0020,
-            high: 0.0025,
-            low: 0.0015,
+            high:  0.0025,
+            low:   0.0015,
             volume: 1000.0,
             num_of_trades: 100,
             is_kline_closed: false,
