@@ -41,7 +41,7 @@ impl BookDepthActor {
 
 /// Handle Websocket messages
 impl StreamHandler<ws::Message, ws::ProtocolError> for BookDepthActor {
-    fn handle(&mut self, msg: ws::Message, ctx: &mut Context<Self>) {
+    fn handle(&mut self, msg: ws::Message, _ctx: &mut Context<Self>) {
         match msg {
             ws::Message::Text(txt) => match &self.depth_levels {
                 None => {
@@ -66,7 +66,7 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for BookDepthActor {
         }
     }
 
-    fn started(&mut self, ctx: &mut Context<Self>) {
+    fn started(&mut self, _ctx: &mut Context<Self>) {
         println!("<book_depth.rs>: Websocket Connected.");
     }
 

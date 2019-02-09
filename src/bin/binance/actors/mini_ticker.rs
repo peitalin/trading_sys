@@ -36,7 +36,7 @@ impl MiniTickerActor {
 }
 
 impl StreamHandler<ws::Message, ws::ProtocolError> for MiniTickerActor {
-    fn handle(&mut self, msg: ws::Message, ctx: &mut Context<Self>) {
+    fn handle(&mut self, msg: ws::Message, _ctx: &mut Context<Self>) {
         match msg {
             ws::Message::Text(txt) => {
                 match self.all_markets {
@@ -47,14 +47,15 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for MiniTickerActor {
                         for ticker in mini_ticker_data.iter() {
                             println!("{:?}", ticker);
                         }
-                    }
-                    _ => {
+                    },
+                    Some(MiniTickerQueryType::SingleMarket) => {
                         let mini_ticker_data: MiniTickerDataInsert =
                             serde_json::from_str::<MiniTickerDataInsert>(&txt).unwrap();
                         println!("{:?}", &mini_ticker_data);
                         let connection = establish_connection_pg();
                         create_mini_tickers(&connection, mini_ticker_data);
-                    }
+                    },
+                    _ => panic!("No MiniTickerQueryType:: provided.")
                 };
             }
             ws::Message::Ping(ping) => self.client_writer.pong(&ping),
@@ -67,7 +68,7 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for MiniTickerActor {
         }
     }
 
-    fn started(&mut self, ctx: &mut Context<Self>) {
+    fn started(&mut self, _ctx: &mut Context<Self>) {
         println!("<mini_ticker.rs>: Websocket Connected.");
     }
 
@@ -76,3 +77,5 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for MiniTickerActor {
         ctx.stop()
     }
 }
+
+

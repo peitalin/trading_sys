@@ -41,14 +41,14 @@ pub struct ClientCommand(pub String);
 impl Handler<ClientCommand> for TradeActor {
     type Result = ();
 
-    fn handle(&mut self, command: ClientCommand, ctx: &mut Context<Self>) {
+    fn handle(&mut self, command: ClientCommand, _ctx: &mut Context<Self>) {
         self.client_writer.text(command.0)
     }
 }
 
 /// Handle Websocket messages
 impl StreamHandler<ws::Message, ws::ProtocolError> for TradeActor {
-    fn handle(&mut self, msg: ws::Message, ctx: &mut Context<Self>) {
+    fn handle(&mut self, msg: ws::Message, _ctx: &mut Context<Self>) {
         match msg {
             ws::Message::Text(txt) => {
                 let trade_data: TradeData = serde_json::from_str::<TradeData>(&txt).unwrap();
@@ -62,7 +62,7 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for TradeActor {
         }
     }
 
-    fn started(&mut self, ctx: &mut Context<Self>) {
+    fn started(&mut self, _ctx: &mut Context<Self>) {
         println!("<trade_actor.rs>: Websocket Connected.");
     }
 

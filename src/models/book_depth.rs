@@ -35,7 +35,7 @@ impl fmt::Display for PartialBookDepthData {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-#[derive(Debug, Serialize, Deserialize, Queryable, Insertable)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
 #[table_name = "book_depth"]
 pub struct BookDepthDataInsert {
     #[serde(rename = "e")]
@@ -57,12 +57,12 @@ pub struct BookDepthDataInsert {
 
 impl fmt::Display for BookDepthDataInsert {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let pretty_json = serde_json::to_string_pretty(&self).unwrap();
-        write!(f, "{}", pretty_json)
+        // let pretty_json = serde_json::to_string_pretty(&self).unwrap();
+        write!(f, "{}", &self)
     }
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, PartialEq, Serialize, Clone)]
 pub struct Quote {
     pub price: f32,
     pub quantity: f32,
@@ -199,5 +199,58 @@ impl fmt::Display for DepthLevels {
             DepthLevels::_10 => write!(f, "10"),
             DepthLevels::_20 => write!(f, "20"),
         }
+    }
+}
+
+
+
+pub static TEST_BOOKDEPTH_DATA: &str = r#"
+{
+  "e": "depthUpdate",
+  "E": 1555444333222,
+  "s": "BNBBTC",
+  "U": 157,
+  "u": 160,
+  "b": [
+    [
+      "0.0024",
+      "10",
+      []
+    ]
+  ],
+  "a": [
+    [
+      "0.0026",
+      "100",
+      []
+    ]
+  ]
+}
+"#;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn try_deserialize_book_depth() {
+        use crate::models::book_depth::{
+            BookDepthDataInsert,
+            TEST_BOOKDEPTH_DATA,
+        };
+        use crate::serde_parsers::create_timestamp_benchmark;
+
+        let test_book_depth_data = serde_json::from_str::<BookDepthDataInsert>(&TEST_BOOKDEPTH_DATA).unwrap();
+
+        let mock_data = BookDepthDataInsert {
+            event: "depthUpdate".to_owned(),
+            event_time: create_timestamp_benchmark(1_555_444_333_222),
+            symbol: crate::currency_pairs::CurrencyPair::BNBBTC,
+            update_first: 157,
+            update_final: 160,
+            bids: vec![Quote { price: 0.0024, quantity: 10.0 }],
+            asks: vec![Quote { price: 0.0026, quantity: 100.0 }],
+        };
+        assert_eq!(test_book_depth_data, mock_data)
     }
 }

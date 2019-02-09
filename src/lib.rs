@@ -140,12 +140,29 @@ mod tests {
         use crate::models::mini_ticker::MiniTickerDataInsert;
         use crate::models::mini_ticker::TEST_MINI_TICKER_DATA;
         use crate::schema::mini_tickers; // DB table name
-        let jsond = serde_json::from_str::<MiniTickerDataInsert>(TEST_MINI_TICKER_DATA).unwrap();
+
+        let test_data = serde_json::from_str::<MiniTickerDataInsert>(TEST_MINI_TICKER_DATA).unwrap();
 
         let conn: PgConnection = establish_connection_pg();
         conn.test_transaction::<_, Error, _>(|| {
             diesel::insert_into(mini_tickers::table)
-                .values(jsond)
+                .values(test_data)
+                .execute(&conn)
+        });
+    }
+
+    #[test]
+    fn db_tickers_postgres_write() {
+        use crate::models::tickers::TickerDataInsert;
+        use crate::models::tickers::TEST_TICKER_DATA;
+        use crate::schema::tickers; // DB table name
+
+        let test_data = serde_json::from_str::<TickerDataInsert>(TEST_TICKER_DATA).unwrap();
+
+        let conn: PgConnection = establish_connection_pg();
+        conn.test_transaction::<_, Error, _>(|| {
+            diesel::insert_into(tickers::table)
+                .values(test_data)
                 .execute(&conn)
         });
     }
@@ -165,6 +182,60 @@ mod tests {
         conn.test_transaction::<_, Error, _>(|| {
             diesel::insert_into(klines::table)
                 .values(kline_data_insert)
+                .execute(&conn)
+        });
+    }
+
+    #[test]
+    fn db_trades_postgres_write() {
+        use crate::models::trades::{
+            TEST_TRADE_DATA,
+            TradeData
+        };
+        use crate::schema::trades; // DB table name
+
+        let test_data = serde_json::from_str::<TradeData>(TEST_TRADE_DATA).unwrap();
+
+        let conn: PgConnection = establish_connection_pg();
+        conn.test_transaction::<_, Error, _>(|| {
+            diesel::insert_into(trades::table)
+                .values(test_data)
+                .execute(&conn)
+        });
+    }
+
+    #[test]
+    fn db_aggregate_trades_postgres_write() {
+        use crate::models::aggregate_trades::{
+            TEST_AGGTRADE_DATA,
+            AggregateTradeData
+        };
+        use crate::schema::aggregate_trades; // DB table name
+
+        let test_data = serde_json::from_str::<AggregateTradeData>(TEST_AGGTRADE_DATA).unwrap();
+
+        let conn: PgConnection = establish_connection_pg();
+        conn.test_transaction::<_, Error, _>(|| {
+            diesel::insert_into(aggregate_trades::table)
+                .values(test_data)
+                .execute(&conn)
+        });
+    }
+
+    #[test]
+    fn db_bookdepth_postgres_write() {
+        use crate::models::book_depth::{
+            TEST_BOOKDEPTH_DATA,
+            BookDepthDataInsert
+        };
+        use crate::schema::book_depth; // DB table name
+
+        let test_data = serde_json::from_str::<BookDepthDataInsert>(TEST_BOOKDEPTH_DATA).unwrap();
+
+        let conn: PgConnection = establish_connection_pg();
+        conn.test_transaction::<_, Error, _>(|| {
+            diesel::insert_into(book_depth::table)
+                .values(test_data)
                 .execute(&conn)
         });
     }

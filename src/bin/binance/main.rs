@@ -45,14 +45,16 @@ pub fn main() {
 
     // spawn_book_depth_client(CurrencyPair::ETHBTC, Some(DepthLevels::_10));
     // spawn_book_depth_client(CurrencyPair::ETHBTC, None);
+    // spawn_book_depth_client(CurrencyPair::XMRETH, None);
+    // spawn_book_depth_client(CurrencyPair::BNBETH, None);
+    // spawn_book_depth_client(CurrencyPair::ETHPAX, None);
 
-    spawn_trade_client(CurrencyPair::ETHBTC);
-
+    // spawn_trade_client(CurrencyPair::ETHBTC);
+    //
     // spawn_kline_client(CurrencyPair::ETHBTC, KlineInterval::_1m);
-
-    // spawn_mini_ticker_client(CurrencyPair::ETHBTC);
-    // spawn_mini_ticker_client(CurrencyPair::ETHBTC, Some(MiniTickerQueryType::AllMarkets));
-
+    //
+    // spawn_mini_ticker_client(CurrencyPair::ETHBTC, Some(MiniTickerQueryType::SingleMarket));
+    //
     // spawn_ticker_client(CurrencyPair::ETHBTC);
 
     // get_book_depth_from_postgres();
@@ -65,7 +67,7 @@ pub fn main() {
 
 pub fn get_all_base_pairs() {
     let url = "https://api.binance.com/api/v3/ticker/price";
-    let mut jsond: Vec<CurrencyPrice> = reqwest::get(url)
+    let jsond: Vec<CurrencyPrice> = reqwest::get(url)
         .unwrap()
         .json::<Vec<CurrencyPrice>>()
         .unwrap();

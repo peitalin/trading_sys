@@ -132,7 +132,8 @@ pub fn spawn_mini_ticker_client(
     all_markets: Option<MiniTickerQueryType>,
 ) {
     let ws_url = match &all_markets {
-        Some(MiniTickerQueryType) => binance_api_url("!miniTicker@arr".to_string()),
+        Some(MiniTickerQueryType::AllMarkets) => binance_api_url("!miniTicker@arr".to_string()),
+        Some(MiniTickerQueryType::SingleMarket) => binance_api_url(format!("{}@miniTicker", currency_pair)),
         _ => binance_api_url(format!("{}@miniTicker", currency_pair)),
     };
     println!("Endpoint: {}", ws_url);
