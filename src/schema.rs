@@ -75,6 +75,35 @@ table! {
 }
 
 table! {
+    tickers (id) {
+        id -> Int4,
+        event -> Text,
+        event_time -> Timestamp,
+        symbol -> Text,
+        price_change -> Float4,
+        price_change_pct -> Float4,
+        weight_avg_price -> Float4,
+        first_trade_before_24hr_window -> Float4,
+        last_price -> Float4,
+        last_quantity -> Float4,
+        best_bid_price -> Float4,
+        best_bid_quantity -> Float4,
+        best_ask_price -> Float4,
+        best_ask_quantity -> Float4,
+        open_price -> Float4,
+        high_price -> Float4,
+        low_price -> Float4,
+        base_asset_vol -> Float4,
+        quote_asset_vol -> Float4,
+        open_time -> Timestamp,
+        close_time -> Timestamp,
+        first_trade_id -> Int4,
+        last_trade_id -> Int4,
+        total_num_trades -> Int4,
+    }
+}
+
+table! {
     trades (trade_id) {
         trade_id -> Int4,
         event -> Text,
@@ -82,6 +111,7 @@ table! {
         symbol -> Text,
         price -> Float4,
         quantity -> Float4,
+        trade_time -> Timestamp,
         buyer_order_id -> Int4,
         seller_order_id -> Int4,
         buyer_mkt_maker -> Bool,
@@ -94,5 +124,6 @@ allow_tables_to_appear_in_same_query!(
     klines,
     mini_tickers,
     posts,
+    tickers,
     trades,
 );

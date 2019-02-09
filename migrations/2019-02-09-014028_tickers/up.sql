@@ -1,0 +1,27 @@
+-- Your SQL goes here
+CREATE TABLE tickers (
+    id SERIAL PRIMARY KEY,
+    event TEXT NOT NULL,
+    event_time TIMESTAMP NOT NULL,
+    symbol TEXT NOT NULL, 
+    price_change REAL NOT NULL,
+    price_change_pct REAL NOT NULL, 
+    weight_avg_price REAL NOT NULL, 
+    first_trade_before_24hr_window REAL NOT NULL, 
+    last_price REAL NOT NULL, 
+    last_quantity REAL NOT NULL, 
+    best_bid_price REAL NOT NULL, 
+    best_bid_quantity REAL NOT NULL, 
+    best_ask_price REAL NOT NULL, 
+    best_ask_quantity REAL NOT NULL, 
+    open_price REAL NOT NULL, 
+    high_price REAL NOT NULL, 
+    low_price REAL NOT NULL, 
+    base_asset_vol REAL NOT NULL, 
+    quote_asset_vol REAL NOT NULL, 
+    open_time TIMESTAMP NOT NULL,
+    close_time TIMESTAMP NOT NULL, 
+    first_trade_id INT NOT NULL, 
+    last_trade_id INT NOT NULL, 
+    total_num_trades INT NOT NULL 
+)

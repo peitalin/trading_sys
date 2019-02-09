@@ -1,4 +1,3 @@
-
 /////////////////////////////////////////////////////////////////
 /// Get data from databases
 /////////////////////////////////////////////////////////////////
@@ -20,10 +19,7 @@ pub fn get_klines_from_postgres() {
         println!("\n{}", result.symbol);
         println!(
             "open: ${}\nclose: ${}\nhigh: ${}\nlow: ${}\n",
-            result.open,
-            result.close,
-            result.high,
-            result.low,
+            result.open, result.close, result.high, result.low,
         );
         println!("-------\n");
     }
@@ -101,19 +97,37 @@ pub fn get_aggregate_trades_from_postgres() {
     }
 }
 
-// pub fn get_mini_ticker_from_postgres() {
-//     use diesel::prelude::*;
-//     use trading_sys::models::mini_ticker::MiniTickerData;
-//     use trading_sys::schema::mini_ticker::dsl::*; // .get_result trait
-//
-//     let connection = trading_sys::establish_connection_pg();
-//
-//     let results: Vec<MiniTickerData> = MiniTickerData
-//         .load::<MiniTickerData>(&connection)
-//         .expect("Error in deserializing AggregateTradeData.");
-//
-//     for result in results {
-//         println!("\n{}", result);
-//         println!("-------\n");
-//     }
-// }
+pub fn get_mini_tickers_from_postgres() {
+    use diesel::prelude::*;
+    use trading_sys::models::mini_ticker::MiniTickerData;
+    use trading_sys::schema::mini_tickers::dsl::*; // .get_result trait
+
+    let connection = trading_sys::establish_connection_pg();
+
+    let results: Vec<MiniTickerData> = mini_tickers
+        .load::<MiniTickerData>(&connection)
+        .expect("Error in deserializing AggregateTradeData.");
+
+    for result in results {
+        println!("\n{}", result);
+        println!("-------\n");
+    }
+}
+
+
+pub fn get_tickers_from_postgres() {
+    use diesel::prelude::*;
+    use trading_sys::models::tickers::TickerData;
+    use trading_sys::schema::tickers::dsl::*; // .get_result trait
+
+    let connection = trading_sys::establish_connection_pg();
+
+    let results: Vec<TickerData> = tickers
+        .load::<TickerData>(&connection)
+        .expect("Error in deserializing AggregateTradeData.");
+
+    for result in results {
+        println!("\n{}", result);
+        println!("-------\n");
+    }
+}

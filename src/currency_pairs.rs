@@ -82,7 +82,6 @@ impl FromSql<Text, Pg> for CurrencyPair {
     }
 }
 
-
 #[derive(Debug, Deserialize, Serialize, PartialEq, EnumString)] // strum converts Strings to Enum directly
 #[derive(AsExpression, FromSqlRow)] // For Diesel PostgreSQL
 #[sql_type = "Text"] // Declare type as Text for PostgreSQL

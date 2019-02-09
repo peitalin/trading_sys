@@ -1,12 +1,11 @@
-use std::fmt;
 use chrono::NaiveDateTime;
 use serde::de;
 use serde::de::{Deserialize, Deserializer};
+use std::fmt;
 
 use crate::currency_pairs::CurrencyPair;
-use crate::serde_parsers::{deserialize_as_f32, deserialize_as_naive_date_time_ms};
 use crate::schema::aggregate_trades;
-
+use crate::serde_parsers::{deserialize_as_f32, deserialize_as_naive_date_time_ms};
 
 ///////////////////////////////////////////////////////////////////////////////
 #[derive(Debug, Serialize, Deserialize, Queryable, Insertable)]

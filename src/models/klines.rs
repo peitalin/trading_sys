@@ -1,12 +1,11 @@
-use std::fmt;
 use chrono::NaiveDateTime;
 use serde::de;
 use serde::de::{Deserialize, Deserializer};
+use std::fmt;
 
 use crate::currency_pairs::CurrencyPair;
-use crate::serde_parsers::{deserialize_as_f32, deserialize_as_naive_date_time_ms};
 use crate::schema::klines;
-
+use crate::serde_parsers::{deserialize_as_f32, deserialize_as_naive_date_time_ms};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct KlineMetaData {
@@ -21,13 +20,11 @@ pub struct KlineMetaData {
     pub kline_data: NewKlineData, //  without id
 }
 
-
 impl fmt::Display for KlineMetaData {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}", &self)
     }
 }
-
 
 #[derive(Debug, Serialize, Deserialize, Insertable)]
 #[table_name = "klines"]
@@ -170,40 +167,38 @@ impl std::fmt::Display for KlineInterval {
     }
 }
 
-
 pub fn map_klinemeta_to_klineinsertdata(kline_meta_data: KlineMetaData) -> KlineDataInsert {
     let kd = kline_meta_data.kline_data;
     KlineDataInsert {
-        event:          kline_meta_data.event,
-        event_time:     kline_meta_data.event_time,
-        start_time:     kd.start_time,
-        close_time:     kd.close_time,
-        symbol:         kd.symbol,
-        interval:       kd.interval,
+        event: kline_meta_data.event,
+        event_time: kline_meta_data.event_time,
+        start_time: kd.start_time,
+        close_time: kd.close_time,
+        symbol: kd.symbol,
+        interval: kd.interval,
         first_trade_id: kd.first_trade_id,
-        last_trade_id:  kd.last_trade_id,
-        open:           kd.open,
-        close:          kd.close,
-        high:           kd.high,
-        low:            kd.low,
-        volume:         kd.volume,
-        num_of_trades:  kd.num_of_trades,
-        is_kline_closed:     kd.is_kline_closed,
-        quote_asset_vol:     kd.quote_asset_vol,
-        taker_buy_base_vol:  kd.taker_buy_base_vol,
+        last_trade_id: kd.last_trade_id,
+        open: kd.open,
+        close: kd.close,
+        high: kd.high,
+        low: kd.low,
+        volume: kd.volume,
+        num_of_trades: kd.num_of_trades,
+        is_kline_closed: kd.is_kline_closed,
+        quote_asset_vol: kd.quote_asset_vol,
+        taker_buy_base_vol: kd.taker_buy_base_vol,
         taker_buy_quote_vol: kd.taker_buy_quote_vol,
     }
 }
 
-
 pub static TEST_KLINE_DATA: &str = r#"
 {
   "e": "kline",
-  "E": 1222333444,
+  "E": 1555444333222,
   "s": "BNBBTC",
   "k": {
-    "t": 1222333444,
-    "T": 1222333444,
+    "t": 1555444333222,
+    "T": 1555444333222,
     "s": "BNBBTC",
     "i": "1m",
     "f": 100,
@@ -226,30 +221,29 @@ pub static TEST_KLINE_DATA: &str = r#"
 #[cfg(test)]
 mod tests {
     #[test]
-    fn test_deserialization_klines() {
-        use crate::serde_parsers::create_timestamp_benchmark;
+    fn try_deserialize_klines() {
         use crate::models::klines::{
-            KlineDataInsert, NewKlineData, TEST_KLINE_DATA,
-            KlineMetaData, map_klinemeta_to_klineinsertdata
+            map_klinemeta_to_klineinsertdata, KlineDataInsert, KlineMetaData, NewKlineData,
+            TEST_KLINE_DATA,
         };
+        use crate::serde_parsers::create_timestamp_benchmark;
 
-        let kline_meta_data =
-                    serde_json::from_str::<KlineMetaData>(&TEST_KLINE_DATA).unwrap();
+        let kline_meta_data = serde_json::from_str::<KlineMetaData>(&TEST_KLINE_DATA).unwrap();
         let kline_data_insert = map_klinemeta_to_klineinsertdata(kline_meta_data);
 
         let mock_data = KlineDataInsert {
             event: "kline".to_owned(),
-            event_time: create_timestamp_benchmark(1_222_333_444),
-            start_time: create_timestamp_benchmark(1_222_333_444),
-            close_time: create_timestamp_benchmark(1_222_333_444),
-            symbol:     crate::currency_pairs::CurrencyPair::BNBBTC,
-            interval:   "1m".to_owned(),
+            event_time: create_timestamp_benchmark(1_555_444_333_222),
+            start_time: create_timestamp_benchmark(1_555_444_333_222),
+            close_time: create_timestamp_benchmark(1_555_444_333_222),
+            symbol: crate::currency_pairs::CurrencyPair::BNBBTC,
+            interval: "1m".to_owned(),
             first_trade_id: 100,
-            last_trade_id:  200,
-            open:  0.0010,
+            last_trade_id: 200,
+            open: 0.0010,
             close: 0.0020,
-            high:  0.0025,
-            low:   0.0015,
+            high: 0.0025,
+            low: 0.0015,
             volume: 1000.0,
             num_of_trades: 100,
             is_kline_closed: false,
@@ -260,11 +254,3 @@ mod tests {
         assert_eq!(kline_data_insert, mock_data)
     }
 }
-
-
-
-
-
-
-
-

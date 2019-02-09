@@ -1,4 +1,3 @@
-
 extern crate chrono;
 extern crate clap;
 
@@ -47,9 +46,19 @@ fn main() -> std::io::Result<()> {
     // // println!("response: {:?}", &response.text().unwrap());
     // Ok(())
 
-    let client = redis::Client::open("redis://127.0.0.1/").unwrap();
-    let conn = client.get_connection().unwrap();
-    redis_get(&conn);
+
+    let cc = chrono::NaiveDateTime::from_timestamp(1_000_000_000, 0 as u32);
+    println!("{:?}", cc);
+
+    //
+    // std::thread::spawn(|| {
+    //     std::process::Command::new("redis-server")
+    //         .output()
+    //         .expect("redis-server error!");
+    // });
+    // let client = redis::Client::open("redis://127.0.0.1/").unwrap();
+    // let conn = client.get_connection().unwrap();
+    // redis_get(&conn);
 
     Ok(())
 }

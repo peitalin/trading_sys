@@ -36,7 +36,6 @@ impl MiniTickerActor {
 }
 
 impl StreamHandler<ws::Message, ws::ProtocolError> for MiniTickerActor {
-
     fn handle(&mut self, msg: ws::Message, ctx: &mut Context<Self>) {
         match msg {
             ws::Message::Text(txt) => {
@@ -48,16 +47,16 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for MiniTickerActor {
                         for ticker in mini_ticker_data.iter() {
                             println!("{:?}", ticker);
                         }
-                    },
+                    }
                     _ => {
                         let mini_ticker_data: MiniTickerDataInsert =
                             serde_json::from_str::<MiniTickerDataInsert>(&txt).unwrap();
                         println!("{:?}", &mini_ticker_data);
                         let connection = establish_connection_pg();
                         create_mini_tickers(&connection, mini_ticker_data);
-                    },
+                    }
                 };
-            },
+            }
             ws::Message::Ping(ping) => self.client_writer.pong(&ping),
             ws::Message::Pong(pong) => self.client_writer.ping(&pong),
             ws::Message::Close(maybe_reason) => match maybe_reason {
@@ -77,5 +76,3 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for MiniTickerActor {
         ctx.stop()
     }
 }
-
-

@@ -1,35 +1,34 @@
+
 #![allow(unused_imports)]
+
+#[macro_use] extern crate log;
+#[macro_use] extern crate env_logger;
+
 extern crate chrono;
 extern crate clap;
 extern crate regex;
 extern crate scraper;
 
-#[macro_use]
-extern crate serde_derive;
 extern crate serde;
-#[macro_use]
-extern crate serde_json;
+#[macro_use] extern crate serde_derive;
+#[macro_use] extern crate serde_json;
 
-#[macro_use]
-extern crate strum_macros;
+#[macro_use] extern crate strum_macros;
 extern crate strum;
 
-#[macro_use]
-extern crate env_logger;
-extern crate reqwest;
+#[macro_use] extern crate proptest;
 
 extern crate data_encoding;
 extern crate ring;
 
+extern crate reqwest;
 extern crate actix;
 extern crate actix_web;
 extern crate futures;
 
-#[macro_use]
-extern crate diesel;
+#[macro_use] extern crate diesel;
 extern crate dotenv;
 extern crate redis;
-
 extern crate uuid;
 
 // pub mod coinmarketcap;
@@ -39,15 +38,15 @@ pub mod schema;
 pub mod serde_parsers;
 
 use crate::models::aggregate_trades::AggregateTradeData;
-use crate::models::book_depth::{BookDepthDataInsert, BookDepthData};
+use crate::models::book_depth::{BookDepthData, BookDepthDataInsert};
+use crate::models::klines::KlineDataInsert;
 use crate::models::trades::TradeData;
-use crate::models::klines::{
-    KlineDataInsert,
-};
 use crate::models::mini_ticker::MiniTickerDataInsert;
+use crate::models::tickers::TickerDataInsert;
 
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
+
 
 
 pub fn establish_connection_pg() -> PgConnection {
@@ -118,26 +117,30 @@ pub fn create_mini_tickers<'a>(conn: &PgConnection, mini_ticker_data: MiniTicker
     println!("Database write result: {:?}\n", res);
 }
 
+pub fn create_tickers<'a>(conn: &PgConnection, ticker_data: TickerDataInsert) {
+    use crate::schema::tickers; // DB table name
+    use diesel::prelude::*;
 
+    let res = diesel::insert_into(tickers::table)
+        .values(ticker_data)
+        .execute(conn);
 
+    println!("Database write result: {:?}\n", res);
+}
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
-    use diesel::result::Error;
     use diesel::connection::Connection;
-    use diesel::pg::PgConnection;
-    use diesel::prelude::*;
-    use crate::establish_connection_pg;
+    use diesel::result::Error;
 
     #[test]
-    fn test_mini_ticker_postgres_write() {
-
-        use crate::schema::mini_tickers; // DB table name
-        use crate::models::mini_ticker::TEST_MINI_TICKER_DATA;
+    fn db_mini_ticker_postgres_write() {
         use crate::models::mini_ticker::MiniTickerDataInsert;
+        use crate::models::mini_ticker::TEST_MINI_TICKER_DATA;
+        use crate::schema::mini_tickers; // DB table name
         let jsond = serde_json::from_str::<MiniTickerDataInsert>(TEST_MINI_TICKER_DATA).unwrap();
-
 
         let conn: PgConnection = establish_connection_pg();
         conn.test_transaction::<_, Error, _>(|| {
@@ -148,12 +151,12 @@ mod tests {
     }
 
     #[test]
-    fn test_klines_postgres_write() {
-        use crate::schema::klines; // DB table name
+    fn db_klines_postgres_write() {
         use crate::models::klines::{
-            KlineDataInsert, NewKlineData, TEST_KLINE_DATA,
-            KlineMetaData, map_klinemeta_to_klineinsertdata
+            map_klinemeta_to_klineinsertdata, KlineDataInsert, KlineMetaData, NewKlineData,
+            TEST_KLINE_DATA,
         };
+        use crate::schema::klines; // DB table name
 
         let kmeta_mdata = serde_json::from_str::<KlineMetaData>(TEST_KLINE_DATA).unwrap();
         let kline_data_insert = map_klinemeta_to_klineinsertdata(kmeta_mdata);
@@ -166,11 +169,3 @@ mod tests {
         });
     }
 }
-
-
-
-
-
-
-
-

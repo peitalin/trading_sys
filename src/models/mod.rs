@@ -4,12 +4,10 @@ use serde::de::{Deserialize, Deserializer};
 use std::fmt;
 
 use crate::currency_pairs::CurrencyPair;
-use crate::serde_parsers::{deserialize_as_f32};
+use crate::serde_parsers::deserialize_as_f32;
 
 use crate::schema::posts;
 
-#[allow(unused_variables)]
-pub mod trades;
 #[allow(unused_variables)]
 pub mod aggregate_trades;
 #[allow(unused_variables)]
@@ -18,6 +16,10 @@ pub mod book_depth;
 pub mod klines;
 #[allow(unused_variables)]
 pub mod mini_ticker;
+#[allow(unused_variables)]
+pub mod trades;
+#[allow(unused_variables)]
+pub mod tickers;
 
 
 #[derive(Queryable)]
@@ -33,12 +35,6 @@ pub struct NewPost<'a> {
     pub title: &'a str,
     pub body: &'a str,
 }
-
-
-
-
-
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // #[derive(FromSqlRow)]

@@ -3,13 +3,10 @@ use std::fmt;
 use std::time::Duration;
 
 use trading_sys::currency_pairs::CurrencyPair;
-use trading_sys::serde_parsers::{deserialize_as_f64};
 use trading_sys::models::klines::{
-    KlineMetaData,
-    KlineInterval,
-    KlineDataInsert,
-    map_klinemeta_to_klineinsertdata,
+    map_klinemeta_to_klineinsertdata, KlineDataInsert, KlineInterval, KlineMetaData,
 };
+use trading_sys::serde_parsers::deserialize_as_f64;
 
 use actix::*;
 use actix_web::ws;
@@ -55,8 +52,7 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for KlineActor {
 
                 println!("{:?}\n", &kline_data_insert);
                 trading_sys::create_kline(&connection, kline_data_insert);
-
-            },
+            }
             ws::Message::Ping(ping) => self.client_writer.pong(&ping),
             ws::Message::Pong(pong) => self.client_writer.ping(&pong),
             _ => (),
@@ -72,4 +68,3 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for KlineActor {
         ctx.stop()
     }
 }
-

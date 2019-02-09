@@ -55,7 +55,7 @@ impl StreamHandler<ws::Message, ws::ProtocolError> for AggregateTradeActor {
                 let connection = establish_connection_pg();
                 create_aggregate_trade(&connection, &aggregate_trade_data);
                 println!("{}", aggregate_trade_data);
-            },
+            }
             ws::Message::Ping(ping) => self.client_writer.pong(&ping),
             ws::Message::Pong(pong) => self.client_writer.ping(&pong),
             _ => (),

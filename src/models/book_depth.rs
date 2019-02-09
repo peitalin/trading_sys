@@ -1,12 +1,11 @@
-use std::fmt;
 use chrono::NaiveDateTime;
 use serde::de;
 use serde::de::{Deserialize, Deserializer};
+use std::fmt;
 
 use crate::currency_pairs::CurrencyPair;
-use crate::serde_parsers::{deserialize_as_f32, deserialize_as_naive_date_time_ms};
 use crate::schema::book_depth;
-
+use crate::serde_parsers::{deserialize_as_f32, deserialize_as_naive_date_time_ms};
 
 #[derive(Queryable)]
 pub struct BookDepthData {
@@ -23,9 +22,9 @@ pub struct BookDepthData {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct PartialBookDepthData {
     #[serde(rename = "lastUpdateId")]
-    pub last_update_id: i32,       // Last update ID
-    pub bids: Vec<Quote>,          // Bids to be updated
-    pub asks: Vec<Quote>,          // Asks to be updated
+    pub last_update_id: i32, // Last update ID
+    pub bids: Vec<Quote>, // Bids to be updated
+    pub asks: Vec<Quote>, // Asks to be updated
 }
 
 impl fmt::Display for PartialBookDepthData {
@@ -202,4 +201,3 @@ impl fmt::Display for DepthLevels {
         }
     }
 }
-
