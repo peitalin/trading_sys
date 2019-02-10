@@ -57,8 +57,8 @@ pub fn main() {
     //
     // spawn_ticker_client(CurrencyPair::ETHBTC);
 
-    // get_book_depth_from_postgres();
-    // get_klines_from_postgres();
+    get_book_depth_from_postgres();
+    get_klines_from_postgres();
     // get_trades_from_postgres();
     // get_aggregate_trades_from_postgres();
 
