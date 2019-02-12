@@ -23,7 +23,7 @@ pub fn binance_api_url(query: String) -> String {
 /// Spawn new Actor scraper clients
 /////////////////////////////////////////////////////////////////
 
-pub fn spawn_book_depth_client(currency_pair: CurrencyPair, depth_levels: Option<DepthLevels>) {
+pub fn spawn_book_depth_client(currency_pair: &CurrencyPair, depth_levels: Option<DepthLevels>) {
     let ws_url = match &depth_levels {
         None => binance_api_url(format!("{pair}@depth", pair = currency_pair)),
         Some(lvl) => binance_api_url(format!(
@@ -53,7 +53,7 @@ pub fn spawn_book_depth_client(currency_pair: CurrencyPair, depth_levels: Option
     );
 }
 
-pub fn spawn_aggregate_trade_client(currency_pair: CurrencyPair) {
+pub fn spawn_aggregate_trade_client(currency_pair: &CurrencyPair) {
     let ws_url = binance_api_url(format!("{}@aggTrade", currency_pair));
     println!("Endpoint: {}", ws_url);
 
@@ -73,7 +73,7 @@ pub fn spawn_aggregate_trade_client(currency_pair: CurrencyPair) {
     );
 }
 
-pub fn spawn_trade_client(currency_pair: CurrencyPair) {
+pub fn spawn_trade_client(currency_pair: &CurrencyPair) {
     use crate::actors::trades::ClientCommand;
 
     let ws_url = binance_api_url(format!("{}@trade", currency_pair));
@@ -107,7 +107,7 @@ pub fn spawn_trade_client(currency_pair: CurrencyPair) {
     );
 }
 
-pub fn spawn_kline_client(currency_pair: CurrencyPair, interval: KlineInterval) {
+pub fn spawn_kline_client(currency_pair: &CurrencyPair, interval: KlineInterval) {
     let ws_url = binance_api_url(format!("{}@kline_{}", currency_pair, interval));
     println!("Endpoint: {}", ws_url);
 
@@ -128,7 +128,7 @@ pub fn spawn_kline_client(currency_pair: CurrencyPair, interval: KlineInterval) 
 }
 
 pub fn spawn_mini_ticker_client(
-    currency_pair: CurrencyPair,
+    currency_pair: &CurrencyPair,
     all_markets: Option<MiniTickerQueryType>,
 ) {
     let ws_url = match &all_markets {
@@ -158,7 +158,7 @@ pub fn spawn_mini_ticker_client(
 }
 
 pub fn spawn_ticker_client(
-    currency_pair: CurrencyPair,
+    currency_pair: &CurrencyPair,
 ) {
     let ws_url = binance_api_url(format!("{}@ticker", currency_pair));
     println!("Endpoint: {}", ws_url);

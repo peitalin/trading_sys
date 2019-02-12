@@ -39,15 +39,30 @@ use trading_sys::models::mini_ticker::MiniTickerQueryType;
 
 
 pub fn main() {
-    let sys = actix::System::new("ws-binance");
+
+    let currencies: Vec<CurrencyPair> = vec![
+        CurrencyPair::ETHBTC,
+        CurrencyPair::ETHUSDT,
+        CurrencyPair::BNBETH,
+        CurrencyPair::LINKETH,
+        CurrencyPair::XLMETH,
+        CurrencyPair::XMRETH,
+        CurrencyPair::ZILETH,
+    ];
+
+
+    // let sys = actix::System::new("ws-binance");
 
     // spawn_aggregate_trade_client(CurrencyPair::ETHBTC);
 
     // spawn_book_depth_client(CurrencyPair::ETHBTC, Some(DepthLevels::_10));
     // spawn_book_depth_client(CurrencyPair::ETHBTC, None);
-    // spawn_book_depth_client(CurrencyPair::XMRETH, None);
-    // spawn_book_depth_client(CurrencyPair::BNBETH, None);
-    // spawn_book_depth_client(CurrencyPair::ETHPAX, None);
+
+    // for currency in currencies.into_iter() {
+    //     spawn_kline_client(&currency, KlineInterval::_1m);
+    //     spawn_trade_client(&currency);
+    //     spawn_ticker_client(&currency);
+    // }
 
     // spawn_trade_client(CurrencyPair::ETHBTC);
     //
@@ -57,12 +72,55 @@ pub fn main() {
     //
     // spawn_ticker_client(CurrencyPair::ETHBTC);
 
-    get_book_depth_from_postgres();
-    get_klines_from_postgres();
+    // get_book_depth_from_postgres();
+    // get_klines_from_postgres();
     // get_trades_from_postgres();
     // get_aggregate_trades_from_postgres();
 
-    let _ = sys.run();
+    // let _ = sys.run();
+
+    raw_sql_query();
+
+}
+
+
+pub fn raw_sql_query() {
+    use diesel::prelude::*;
+    use trading_sys::models::trades::TradeData;
+    use trading_sys::schema::trades::dsl::*; // .get_result trait
+    use diesel::sql_types::{Float, Numeric};
+
+    let connection = trading_sys::establish_connection_pg();
+
+
+    // let results = trades.select((price, quantity))
+    //     .filter(symbol.eq("ETHBTC"))
+    //     .load::<(f32, f32)>(&connection)
+    //     .unwrap();
+
+    let time_cutoff = chrono::NaiveDate::from_ymd(2019, 2, 11).and_hms(4, 38, 38);
+    let results = trades
+        .filter(event_time.gt(time_cutoff))
+        .load::<TradeData>(&connection)
+        .unwrap();
+
+
+    // let results = diesel::sql_query("SELECT price FROM trades")
+    //     .execute(&connection)
+    //     .unwrap();
+
+
+    // let results = trades
+    //     .filter(quantity.gt(100))
+    //     .select(price)
+    //     .first(&connection)
+    //     .unwrap();
+
+    for r in results {
+        println!("{:?}", r);
+    }
+    // println!("{:?}", results);
+
 }
 
 pub fn get_all_base_pairs() {

@@ -7,7 +7,7 @@ use crate::currency_pairs::CurrencyPair;
 use crate::schema::trades;
 use crate::serde_parsers::{deserialize_as_f32, deserialize_as_naive_date_time_ms};
 
-#[derive(Debug, PartialEq, Serialize, Deserialize, Queryable, Insertable)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Queryable, QueryableByName, Insertable)]
 #[table_name = "trades"]
 pub struct TradeData {
     #[serde(rename = "t")]
