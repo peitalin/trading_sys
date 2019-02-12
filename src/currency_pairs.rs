@@ -70,15 +70,18 @@ impl ToSql<Text, Pg> for CurrencyPair {
 
 impl FromSql<Text, Pg> for CurrencyPair {
     fn from_sql(maybe_bytes: Option<&[u8]>) -> diesel::deserialize::Result<Self> {
-        match maybe_bytes {
-            Some(bytes) => {
-                let s: &str = std::str::from_utf8(bytes)
-                    .expect("Error converting bytes to str in FromSql for CurrencyPair");
-                Ok(s.parse::<CurrencyPair>()
-                    .expect("CurrencyPair::from_str(s) failed?"))
-            }
-            None => panic!("No CurrencyPair read FromSql"),
-        }
+        // match maybe_bytes {
+        //     Some(bytes) => {
+        //         let s: &str = std::str::from_utf8(bytes)
+        //             .expect("Error converting bytes to str in FromSql for CurrencyPair");
+        //         Ok(s.parse::<CurrencyPair>()
+        //             .expect("CurrencyPair::from_str(s) failed?"))
+        //     }
+        //     None => panic!("No CurrencyPair read FromSql"),
+        // }
+        let currency = <String as FromSql<Text, Pg>>::from_sql(maybe_bytes)
+            .expect("Error converting Text to CurrencyPair in FromSql<Text, Pg> trait");
+        Ok(currency.parse::<CurrencyPair>().expect("CurrencyPair::from_str(s) failed"))
     }
 }
 
