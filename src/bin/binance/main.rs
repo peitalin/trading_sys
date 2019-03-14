@@ -51,10 +51,9 @@ pub fn main() {
     ];
 
 
-    // let sys = actix::System::new("ws-binance");
+    let sys = actix::System::new("ws-binance");
 
     // spawn_aggregate_trade_client(CurrencyPair::ETHBTC);
-
     // spawn_book_depth_client(CurrencyPair::ETHBTC, Some(DepthLevels::_10));
     // spawn_book_depth_client(CurrencyPair::ETHBTC, None);
 
@@ -64,22 +63,20 @@ pub fn main() {
     //     spawn_ticker_client(&currency);
     // }
 
-    // spawn_trade_client(CurrencyPair::ETHBTC);
-    //
-    // spawn_kline_client(CurrencyPair::ETHBTC, KlineInterval::_1m);
-    //
-    // spawn_mini_ticker_client(CurrencyPair::ETHBTC, Some(MiniTickerQueryType::SingleMarket));
-    //
-    // spawn_ticker_client(CurrencyPair::ETHBTC);
+    spawn_trade_client(&CurrencyPair::ETHBTC);
 
-    get_book_depth_from_postgres();
-    get_klines_from_postgres();
-    get_trades_from_postgres();
-    get_aggregate_trades_from_postgres();
+    spawn_kline_client(&CurrencyPair::ETHBTC, KlineInterval::_1m);
 
-    // let _ = sys.run();
+    spawn_mini_ticker_client(&CurrencyPair::ETHBTC, Some(MiniTickerQueryType::SingleMarket));
 
-    raw_sql_query();
+    spawn_ticker_client(&CurrencyPair::ETHBTC);
+
+    // get_book_depth_from_postgres();
+    // get_klines_from_postgres();
+    // get_trades_from_postgres();
+    // get_aggregate_trades_from_postgres();
+
+    let _ = sys.run();
 
 }
 
@@ -91,12 +88,6 @@ pub fn raw_sql_query() {
     use diesel::sql_types::{Float, Numeric};
 
     let connection = trading_sys::establish_connection_pg();
-
-
-    // let results = trades.select((price, quantity))
-    //     .filter(symbol.eq("ETHBTC"))
-    //     .load::<(f32, f32)>(&connection)
-    //     .unwrap();
 
     let time_cutoff = chrono::NaiveDate::from_ymd(2019, 2, 11).and_hms(4, 38, 38);
     let results = trades

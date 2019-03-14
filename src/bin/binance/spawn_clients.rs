@@ -36,20 +36,20 @@ pub fn spawn_book_depth_client(currency_pair: &CurrencyPair, depth_levels: Optio
 
     actix::Arbiter::spawn(
         ws::Client::new(ws_url) // Instantiate ws client  -> ws::Client
-            .connect() // Do websocket handshake -> ws::ClientHandshake
-            .map_err(|e| panic!("Error: {}", e)) // requires use futures::Future;
-            .map(|(reader, writer): (ws::ClientReader, ws::ClientWriter)| {
-                // create an actor
+        .connect() // Do websocket handshake -> ws::ClientHandshake
+        .map_err(|e| panic!("Error: {}", e)) // requires use futures::Future;
+        .map(|(reader, writer): (ws::ClientReader, ws::ClientWriter)| {
+            // create an actor
 
-                let addr: actix::Addr<BookDepthActor> =
-                    BookDepthActor::create(|ctx: &mut Context<BookDepthActor>| {
-                        BookDepthActor::add_stream(reader, ctx);
-                        BookDepthActor {
-                            client_writer: writer,
-                            depth_levels: depth_levels,
-                        }
-                    });
-            }),
+            let addr: actix::Addr<BookDepthActor> =
+                BookDepthActor::create(|ctx: &mut Context<BookDepthActor>| {
+                    BookDepthActor::add_stream(reader, ctx);
+                    BookDepthActor {
+                        client_writer: writer,
+                        depth_levels: depth_levels,
+                    }
+                });
+        }),
     );
 }
 
